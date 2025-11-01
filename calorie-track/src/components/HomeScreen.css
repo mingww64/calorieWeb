@@ -1,0 +1,29 @@
+.add{
+    font-size: 28px;
+    padding: 20px;
+    width: 300px;
+    cursor: pointer;
+}
+
+.add span {
+    display: inline-block;
+    position: relative;
+    transition: 0.5s;
+}
+
+.add span:after {
+    content: '\00bb';
+    position: absolute;
+    opacity: 0;
+    right: -20px;
+    transition: 0.5s;
+}
+
+.add:hover span {
+    padding-right: 25px;
+}
+
+.add:hover span:after {
+    opacity: 1;
+    right: 0;
+}
