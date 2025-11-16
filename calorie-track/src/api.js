@@ -98,8 +98,15 @@ export const getFoods = () =>
   apiFetch('/api/foods');
 
 /**
- * Search USDA FoodData Central for a food
- * Returns: { name, calories, protein, fat, carbs, fdcId }
+ * Search USDA FoodData Central for foods
+ * Returns: { error?, suggestions: [{ fdcId, name, dataType, brandOwner }] }
  */
-export const searchUSDAFood = (query) =>
+export const searchUSDAFoods = (query) =>
   apiFetch(`/api/foods/search/usda?q=${encodeURIComponent(query)}`);
+
+/**
+ * Get specific USDA food nutrient data by FDC ID  
+ * Returns: { error?, nutrients: { fdcId, name, calories, protein, fat, carbs, dataType } }
+ */
+export const getUSDAFood = (fdcId) =>
+  apiFetch(`/api/foods/usda/${fdcId}`);
