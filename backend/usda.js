@@ -76,6 +76,7 @@ function extractNutrients(foodData) {
   };
 
   if (!foodData.foodNutrients || !Array.isArray(foodData.foodNutrients)) {
+    console.log(`No nutrients found for food: ${foodData.description || 'Unknown'}`);
     return nutrients;
   }
 
@@ -89,17 +90,33 @@ function extractNutrients(foodData) {
     '1004': 'fat',        // Total lipid (fat) (g) - alternate ID
     '205': 'carbs',       // Carbohydrate, by difference (g)
     '1005': 'carbs',      // Carbohydrate, by difference (g) - alternate ID
+    '269': 'carbs',       // Total sugars (g) - fallback for carbs
+    '291': 'carbs',       // Fiber, total dietary (g) - can add to carbs
   };
 
+  console.log(`Extracting nutrients for: ${foodData.description || 'Unknown'}`);
+  console.log(`Found ${foodData.foodNutrients.length} nutrients`);
+
   for (const nutrient of foodData.foodNutrients) {
-    // Handle different nutrient data structures
-    const nutrientId = nutrient.number || nutrient.nutrient?.id || nutrient.nutrientId;
+    // Handle different nutrient data structures from API
+    const nutrientId = String(nutrient.number || nutrient.nutrient?.id || nutrient.nutrientId);
     const field = nutrientMap[nutrientId];
 
     if (field && nutrient.amount !== null && nutrient.amount !== undefined) {
-      const value = nutrient.amount || nutrient.value || 0;
-      // Round to 1 decimal place
-      nutrients[field] = Math.max(0, Math.round(value * 10) / 10);
+      const value = parseFloat(nutrient.amount || nutrient.value || 0);
+      
+      if (value > 0) {
+        // For carbs, we might want to add fiber to total carbs
+        if (field === 'carbs' && (nutrientId === '291')) {
+          // Add fiber to existing carbs
+          nutrients[field] += Math.round(value * 10) / 10;
+        } else {
+          // Round to 1 decimal place and ensure we take the highest value if multiple entries
+          nutrients[field] = Math.max(nutrients[field], Math.round(value * 10) / 10);
+        }
+        
+        console.log(`  ${nutrient.name || 'Unknown nutrient'} (${nutrientId}): ${value} -> ${field}`);
+      }
     }
   }
 
@@ -110,8 +127,10 @@ function extractNutrients(foodData) {
       (nutrients.fat * 9) + 
       (nutrients.carbs * 4)
     );
+    console.log(`  Estimated calories from macros: ${nutrients.calories}`);
   }
 
+  console.log(`Final nutrients:`, nutrients);
   return nutrients;
 }
 
