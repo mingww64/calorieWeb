@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getFoodSuggestions, searchUSDAFoods } from '../api';
+import './EntryForm.css';
 
 function EntryForm({ onAdd }) {
   const [name, setName] = useState('');

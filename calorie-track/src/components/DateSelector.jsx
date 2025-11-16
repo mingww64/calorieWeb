@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import './DateSelector.css';
 
 function DateSelector({ selectedDate, onDateChange }) {
+  const dateInputRef = useRef(null);
   const today = new Date().toISOString().slice(0, 10);
   
   const handlePreviousDay = () => {
@@ -23,6 +25,12 @@ function DateSelector({ selectedDate, onDateChange }) {
     onDateChange(today);
   };
 
+  const handleDateClick = () => {
+    if (dateInputRef.current) {
+      dateInputRef.current.showPicker();
+    }
+  };
+
   const formatDate = (dateStr) => {
     const date = new Date(dateStr + 'T00:00:00');
     return date.toLocaleDateString('en-US', { 
@@ -40,7 +48,17 @@ function DateSelector({ selectedDate, onDateChange }) {
     <div className="date-selector">
       <button onClick={handlePreviousDay} className="nav-btn">← Previous</button>
       <div className="date-display">
-        <span className="date-text">{formatDate(selectedDate)}</span>
+        <div className="date-picker-wrapper" onClick={handleDateClick}>
+          <span className="date-text">{formatDate(selectedDate)}</span>
+          <input 
+            ref={dateInputRef}
+            type="date" 
+            value={selectedDate}
+            max={today}
+            onChange={(e) => onDateChange(e.target.value)}
+            className="date-input-hidden"
+          />
+        </div>
         {!isToday && (
           <button onClick={handleToday} className="today-btn">Go to Today</button>
         )}

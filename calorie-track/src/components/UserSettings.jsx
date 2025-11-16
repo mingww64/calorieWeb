@@ -5,6 +5,7 @@ import {
   updatePassword,
 } from 'firebase/auth';
 import { auth } from '../firebase';
+import './UserSettings.css';
 
 function UserSettings({ user, onClose }) {
   const [displayName, setDisplayName] = useState(user.displayName || '');

@@ -1,4 +1,5 @@
 import React from 'react';
+import './EntryList.css';
 
 function EntryList({ entries, onEdit, onDelete }) {
   return (
@@ -10,14 +11,27 @@ function EntryList({ entries, onEdit, onDelete }) {
         <ul>
           {entries.map((entry) => (
             <li key={entry.id}>
-              <strong>{entry.name}</strong> ({entry.quantity}) - {entry.calories} cal
-              <div className="entry-actions">
-                <button className="edit-btn" onClick={() => onEdit(entry.id)}>
-                  Edit
-                </button>
-                <button className="delete-btn" onClick={() => onDelete(entry.id)}>
-                  Delete
-                </button>
+              <div className="entry-content">
+                <div className="entry-left">
+                  <strong className="entry-name">{entry.name}</strong>
+                  <span className="entry-quantity">{entry.quantity}</span>
+                </div>
+                {(entry.protein != null || entry.fat != null || entry.carbs != null) && (
+                  <div className="entry-macros">
+                    {entry.protein != null && <span className="macro protein">🥩 {entry.protein}g</span>}
+                    {entry.fat != null && <span className="macro fat">🧈 {entry.fat}g</span>}
+                    {entry.carbs != null && <span className="macro carbs">🌾 {entry.carbs}g</span>}
+                  </div>
+                )}
+                <span className="entry-calories">{entry.calories} cal</span>
+                <div className="entry-actions">
+                  <button className="edit-btn" onClick={() => onEdit(entry.id)}>
+                    Edit
+                  </button>
+                  <button className="delete-btn" onClick={() => onDelete(entry.id)}>
+                    Delete
+                  </button>
+                </div>
               </div>
             </li>
           ))}
