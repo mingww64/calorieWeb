@@ -1,16 +1,60 @@
-# React + Vite
+# Calorie Track
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A small React + Vite single-page app for logging calorie intake. This repo contains the frontend source for the "calorie-track" app (inside the `calorie-track/` directory).
 
-Currently, two official plugins are available:
+## What's this
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The app's goal is to let users manually log foods and calories, persist entries locally in the browser as well as in cloud, and show a daily total. The README below includes a short summary of user stories and a quick-start for developers.
 
-## React Compiler
+## Quick start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Prerequisites:
+- Node.js (18+ recommended)
+- npm (bundled with Node)
 
-## Expanding the ESLint configuration
+Install dependencies and run the dev server:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+cd calorie-track
+npm install
+npm run dev
+```
+
+Open the dev server URL printed by Vite (usually http://localhost:5173).
+
+Common scripts (from `package.json`):
+
+- npm run dev     # start Vite dev server
+- npm run build   # build production bundle
+- npm run preview # preview production build locally
+- npm run lint    # run ESLint
+
+## Project summary
+
+- Manual food entry: add a food name, quantity and calories and save it to today's list.
+- Local persistence: entries are stored in browser storage so they survive reloads, also should be upload to cloud database for individual user.
+- Daily summary: show a running total of calories for the current day.
+- Edit/delete: allow corrections to previously logged items.
+- Historical view: (optional) visualize last 7 days as a chart.
+- Nice-to-have: AI tips and image-based recognition (future enhancements).
+
+## Project structure
+
+- `index.html` — app entry
+- `src/main.jsx` — React entry point
+- `src/App.jsx` — top-level app
+- `src/components/` — UI components (HomeScreen, etc.)
+- `public/` — static assets
+
+Open `src/components` to explore the UI; `HomeScreen.jsx` is the main screen with the entry form and daily total.
+
+## Contributing
+
+1. Create a feature branch off `main`: `git checkout -b feature/your-short-name`
+2. Make changes and keep commits small and focused.
+3. Run lint and dev server locally to verify behavior.
+4. Push and open a pull request against `main`.
+
+## License
+
+This repository includes a top-level `LICENSE` file (see project root) — follow the license terms for use and contributions.
