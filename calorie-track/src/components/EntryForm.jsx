@@ -239,7 +239,7 @@ function EntryForm({ onAdd }) {
         />
         
         {/* Food Suggestions */}
-        {showSuggestions && (suggestions.length > 0 || usdaSuggestions.length > 0) && (
+        {showSuggestions && name.trim().length > 0 && (
           <div className="food-suggestions-dropdown">
             {/* Debug info */}
             {process.env.NODE_ENV === 'development' && (
@@ -272,14 +272,13 @@ function EntryForm({ onAdd }) {
               </div>
             )}
             
-            {/* USDA suggestions */}
-            {usdaSuggestions.length > 0 && (
-              <div className="suggestion-section">
-                <div className="suggestion-header usda-header-with-filter">
-                  <div className="usda-header-title">
-                    USDA Database {searchingUSDA && <span className="loading">Searching...</span>}
-                  </div>
-                  <div className="data-type-checkboxes-inline">
+            {/* USDA suggestions and filters */}
+            <div className="suggestion-section">
+              <div className="suggestion-header usda-header-with-filter">
+                <div className="usda-header-title">
+                  USDA Database {searchingUSDA && <span className="loading">Searching...</span>}
+                </div>
+                <div className="data-type-checkboxes-inline">
                     <label className="checkbox-label">
                       <input
                         type="checkbox"
@@ -339,28 +338,36 @@ function EntryForm({ onAdd }) {
                   </div>
                   <span className="usda-note">• Nutrition values per 100g</span>
                 </div>
-                {usdaSuggestions.map((food) => (
-                  <div
-                    key={`usda-${food.fdcId}`}
-                    className={`suggestion-item usda-suggestion ${!food.hasNutrients ? 'limited-nutrition' : ''}`}
-                    onClick={() => handleUSDASelect(food)}
-                  >
-                    <div className="food-name">{food.name}</div>
-                    <div className="food-meta">
-                      <span className="food-type">{food.dataType}</span>
-                      {food.brandOwner && <span className="brand-owner"> • {food.brandOwner}</span>}
-                      {food.hasNutrients ? (
-                        <span className="nutrition-preview">
-                          {food.calories} kcal • P: {food.protein}g • F: {food.fat}g • C: {food.carbs}g
-                        </span>
-                      ) : (
-                        <span className="nutrition-warning"> • Limited nutrition data</span>
-                      )}
+                {usdaSuggestions.length > 0 ? (
+                  usdaSuggestions.map((food) => (
+                    <div
+                      key={`usda-${food.fdcId}`}
+                      className={`suggestion-item usda-suggestion ${!food.hasNutrients ? 'limited-nutrition' : ''}`}
+                      onClick={() => handleUSDASelect(food)}
+                    >
+                      <div className="food-name">{food.name}</div>
+                      <div className="food-meta">
+                        <span className="food-type">{food.dataType}</span>
+                        {food.brandOwner && <span className="brand-owner"> • {food.brandOwner}</span>}
+                        {food.hasNutrients ? (
+                          <span className="nutrition-preview">
+                            {food.calories} kcal • P: {food.protein}g • F: {food.fat}g • C: {food.carbs}g
+                          </span>
+                        ) : (
+                          <span className="nutrition-warning"> • Limited nutrition data</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  !searchingUSDA && (
+                    <div className="suggestion-item no-results">
+                      <div className="food-name">No results found</div>
+                      <div className="food-meta">Try adjusting the data types above or enter manually below</div>
+                    </div>
+                  )
+                )}
               </div>
-            )}
             
             {/* Manual entry option */}
             <div className="suggestion-section">
