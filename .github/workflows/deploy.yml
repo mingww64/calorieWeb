@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [ main ]
 
+
 jobs:
   build:
     name: Build & Deploy
@@ -24,9 +25,10 @@ jobs:
         working-directory: calorie-track
 
       - name: Build
-        env: ${{ secrets }}
         run: npm run build --if-present
         working-directory: calorie-track
+
+
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
