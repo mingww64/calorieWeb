@@ -81,8 +81,8 @@ function EntryForm({ onAdd }) {
     const newName = e.target.value;
     setName(newName);
     
-    // Clear nutrition data when name changes
-    if (newName !== selectedFood?.data?.name) {
+    // Only clear nutrition data if this is a manual change and doesn't match selected food
+    if (selectedFood && newName !== selectedFood.data?.name && newName !== selectedFood.data?.description) {
       setCalories('');
       setProtein('');
       setFat('');
@@ -94,8 +94,23 @@ function EntryForm({ onAdd }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (name && calories && protein && fat && carbs) {
-      onAdd(name, quantity || '1', parseInt(calories), parseFloat(protein), parseFloat(fat), parseFloat(carbs));
+    
+    // Check if required fields have values (including zero)
+    const hasName = name.trim() !== '';
+    const hasCalories = calories !== '' && calories !== null && calories !== undefined;
+    const hasProtein = protein !== '' && protein !== null && protein !== undefined;
+    const hasFat = fat !== '' && fat !== null && fat !== undefined;
+    const hasCarbs = carbs !== '' && carbs !== null && carbs !== undefined;
+    
+    if (hasName && hasCalories && hasProtein && hasFat && hasCarbs) {
+      onAdd(
+        name.trim(), 
+        quantity || '1', 
+        parseInt(calories) || 0, 
+        parseFloat(protein) || 0, 
+        parseFloat(fat) || 0, 
+        parseFloat(carbs) || 0
+      );
       
       // Reset form
       setName('');
@@ -112,8 +127,14 @@ function EntryForm({ onAdd }) {
     }
   };
 
-  const isFormValid = name && calories && protein && fat && carbs;
-  const hasNutritionData = calories || protein || fat || carbs;
+  // Improved validation that handles zero values properly
+  const isFormValid = name.trim() !== '' && 
+                     calories !== '' && calories !== null && calories !== undefined &&
+                     protein !== '' && protein !== null && protein !== undefined &&
+                     fat !== '' && fat !== null && fat !== undefined &&
+                     carbs !== '' && carbs !== null && carbs !== undefined;
+                     
+  const hasNutritionData = calories !== '' || protein !== '' || fat !== '' || carbs !== '';
 
   return (
     <form onSubmit={handleSubmit} className="entry-form">
@@ -132,6 +153,13 @@ function EntryForm({ onAdd }) {
         {/* Food Suggestions */}
         {showSuggestions && (suggestions.length > 0 || usdaSuggestions.length > 0) && (
           <div className="food-suggestions-dropdown">
+            {/* Debug info */}
+            {process.env.NODE_ENV === 'development' && (
+              <div style={{fontSize: '12px', color: '#888', padding: '4px', background: '#f0f0f0'}}>
+                Debug: Local: {suggestions.length}, USDA: {usdaSuggestions.length}, Show: {showSuggestions.toString()}
+              </div>
+            )}
+            
             {/* Local suggestions first */}
             {suggestions.length > 0 && (
               <div className="suggestion-section">
