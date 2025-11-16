@@ -112,7 +112,15 @@ export const getFoods = () =>
 
 /**
  * Search USDA FoodData Central for foods
+ * @param {string} query - Search term
+ * @param {number} limit - Max results
+ * @param {string[]} dataTypes - Array of data types to filter by (e.g., ['Foundation', 'Branded'])
  * Returns: { error?, suggestions: [{ fdcId, name, dataType, brandOwner }] }
  */
-export const searchUSDAFoods = (query) =>
-  apiFetch(`/api/foods/search/usda?q=${encodeURIComponent(query)}`);
+export const searchUSDAFoods = (query, limit = 10, dataTypes = null) => {
+  let url = `/api/foods/search/usda?q=${encodeURIComponent(query)}`;
+  if (dataTypes && dataTypes.length > 0) {
+    url += `&dataTypes=${dataTypes.join(',')}`;
+  }
+  return apiFetch(url);
+};
