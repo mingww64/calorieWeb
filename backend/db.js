@@ -40,19 +40,44 @@ db.prepare(`
   CREATE INDEX IF NOT EXISTS idx_entries_userId_date ON entries(userId, date)
 `).run();
 
-// Create foods table to track foods and calories for autocomplete
+// Create foods table to track foods and calories for autocomplete + nutrients
 db.prepare(`
   CREATE TABLE IF NOT EXISTS foods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     userId TEXT NOT NULL,
     name TEXT NOT NULL,
     calories INTEGER NOT NULL,
+    protein REAL,
+    fat REAL,
+    carbs REAL,
     usageCount INTEGER DEFAULT 1,
     lastUsed TEXT NOT NULL,
+    usdaFdcId TEXT,
+    createdAt TEXT NOT NULL,
     FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(userId, name)
   )
 `).run();
+
+// Add columns if they don't exist (for backward compatibility)
+const foodsTableInfo = db.prepare("PRAGMA table_info(foods)").all();
+const columnNames = foodsTableInfo.map(col => col.name);
+
+if (!columnNames.includes('protein')) {
+  db.prepare('ALTER TABLE foods ADD COLUMN protein REAL').run();
+}
+if (!columnNames.includes('fat')) {
+  db.prepare('ALTER TABLE foods ADD COLUMN fat REAL').run();
+}
+if (!columnNames.includes('carbs')) {
+  db.prepare('ALTER TABLE foods ADD COLUMN carbs REAL').run();
+}
+if (!columnNames.includes('usdaFdcId')) {
+  db.prepare('ALTER TABLE foods ADD COLUMN usdaFdcId TEXT').run();
+}
+if (!columnNames.includes('createdAt')) {
+  db.prepare('ALTER TABLE foods ADD COLUMN createdAt TEXT').run();
+}
 
 // Create index for faster food lookups
 db.prepare(`
