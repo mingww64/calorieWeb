@@ -219,6 +219,19 @@
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
+.suggestion-item.no-results {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  cursor: default;
+}
+
+.suggestion-item.no-results:hover {
+  background-color: transparent;
+  border-left: none;
+  padding-left: 16px;
+}
+
 .food-name {
   font-weight: 600;
   margin-bottom: 6px;
