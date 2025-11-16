@@ -691,3 +691,333 @@
     flex-direction: column;
   }
 }
+
+/* USDA Food Search Modal */
+.usda-search-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.usda-search-content {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  color: #333;
+  position: relative;
+}
+
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.search-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.search-input-section {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.search-input-group input {
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.search-input-group button {
+  padding: 0.75rem 1.5rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.25s;
+  white-space: nowrap;
+}
+
+.search-input-group button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.search-input-group button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.search-tip {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+  font-style: italic;
+}
+
+.search-results {
+  padding: 1.5rem;
+}
+
+.search-results h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.search-error {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 1rem;
+  color: #856404;
+}
+
+.search-error ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.food-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.food-suggestion-item {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.25s;
+  background-color: #fff;
+}
+
+.food-suggestion-item:hover {
+  background-color: #f8f9fa;
+  border-color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.food-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+.food-details {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.food-type {
+  background-color: #e9ecef;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.brand-owner {
+  font-style: italic;
+}
+
+.search-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.new-search-btn, .manual-entry-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.25s;
+}
+
+.new-search-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.new-search-btn:hover {
+  background-color: #5a6268;
+}
+
+.manual-entry-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.manual-entry-btn:hover {
+  background-color: #218838;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+/* Entry Form Enhancements */
+.macros-prompt {
+  background-color: #e7f3ff;
+  border: 1px solid #bee5eb;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.macros-prompt p {
+  margin: 0 0 1rem 0;
+  color: #0c5460;
+  font-weight: 500;
+}
+
+.macros-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.usda-search-btn, .manual-entry-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.25s;
+  font-size: 0.9rem;
+}
+
+.usda-search-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.usda-search-btn:hover {
+  background-color: #0056b3;
+}
+
+.manual-macros {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.manual-macros h4 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.macros-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.macros-inputs input {
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.macros-display {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.macros-display h4 {
+  margin: 0 0 0.75rem 0;
+  color: #155724;
+  font-size: 1rem;
+}
+
+.macros-summary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.macros-summary span {
+  background-color: #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  border: 1px solid #c3e6cb;
+  font-size: 0.9rem;
+  color: #155724;
+  font-weight: 500;
+}
+
+.change-method-btn {
+  padding: 0.5rem 1rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: background-color 0.25s;
+}
+
+.change-method-btn:hover {
+  background-color: #5a6268;
+}
+
+button.disabled {
+  background-color: #e9ecef !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+}
+
+button.disabled:hover {
+  background-color: #e9ecef !important;
+}

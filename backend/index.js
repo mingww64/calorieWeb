@@ -4,7 +4,7 @@ import 'dotenv/config';
 import db from './db.js';
 import { auth } from './firebase.js';
 import { verifyIdToken, errorHandler } from './middleware.js';
-import { searchUSDAFood, adjustNutrients, estimateNutrients } from './usda.js';
+import { searchUSDAFoods, getUSDAFoodById, adjustNutrients } from './usda.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -124,6 +124,7 @@ app.get('/api/summary', verifyIdToken, (req, res) => {
  * POST /api/entries
  * Create a new entry
  * Body: { name, quantity, calories, protein?, fat?, carbs?, date? }
+ * Note: protein, fat, carbs are required - no estimation fallback
  */
 app.post('/api/entries', verifyIdToken, async (req, res, next) => {
   try {
@@ -133,39 +134,19 @@ app.post('/api/entries', verifyIdToken, async (req, res, next) => {
       return res.status(400).json({ error: 'name and calories required' });
     }
 
+    if (protein == null || fat == null || carbs == null) {
+      return res.status(400).json({ 
+        error: 'Macronutrient data required. Please use USDA search or enter manually.',
+        missingFields: {
+          protein: protein == null,
+          fat: fat == null, 
+          carbs: carbs == null
+        }
+      });
+    }
+
     const now = new Date().toISOString();
     const entryDate = date || now.slice(0, 10);
-    
-    // If nutrients not provided, try to get from USDA API
-    let finalProtein = protein;
-    let finalFat = fat;
-    let finalCarbs = carbs;
-
-    if (!protein || !fat || !carbs) {
-      try {
-        const usdaFood = await searchUSDAFood(name);
-        if (usdaFood) {
-          const qty = parseInt(quantity) || 100;
-          const adjusted = adjustNutrients(usdaFood, qty);
-          finalProtein = finalProtein ?? adjusted.protein;
-          finalFat = finalFat ?? adjusted.fat;
-          finalCarbs = finalCarbs ?? adjusted.carbs;
-        } else {
-          // Fallback to estimates
-          const estimated = estimateNutrients(calories);
-          finalProtein = finalProtein ?? estimated.protein;
-          finalFat = finalFat ?? estimated.fat;
-          finalCarbs = finalCarbs ?? estimated.carbs;
-        }
-      } catch (err) {
-        console.warn('Failed to fetch USDA nutrients:', err.message);
-        // Use estimates as fallback
-        const estimated = estimateNutrients(calories);
-        finalProtein = finalProtein ?? estimated.protein;
-        finalFat = finalFat ?? estimated.fat;
-        finalCarbs = finalCarbs ?? estimated.carbs;
-      }
-    }
 
     const info = db.prepare(`
       INSERT INTO entries (userId, name, quantity, calories, date, createdAt, updatedAt)
@@ -182,15 +163,15 @@ app.post('/api/entries', verifyIdToken, async (req, res, next) => {
         req.user.uid, 
         name, 
         Number(calories), 
-        finalProtein, 
-        finalFat, 
-        finalCarbs, 
+        Number(protein), 
+        Number(fat), 
+        Number(carbs), 
         now, 
         now,
         now,
-        finalProtein,
-        finalFat,
-        finalCarbs
+        Number(protein),
+        Number(fat),
+        Number(carbs)
       );
     } catch (foodErr) {
       console.warn('Failed to track food:', foodErr.message);
@@ -336,8 +317,8 @@ app.get('/api/foods', verifyIdToken, (req, res) => {
 
 /**
  * GET /api/foods/search/usda?q=query
- * Search USDA FoodData Central for a specific food
- * Returns: { name, calories, protein, fat, carbs, fdcId }
+ * Search USDA FoodData Central for foods
+ * Returns: { error?, suggestions: [{ fdcId, name, dataType, brandOwner }] }
  */
 app.get('/api/foods/search/usda', verifyIdToken, async (req, res) => {
   try {
@@ -347,16 +328,37 @@ app.get('/api/foods/search/usda', verifyIdToken, async (req, res) => {
       return res.status(400).json({ error: 'Query must be at least 2 characters' });
     }
 
-    const food = await searchUSDAFood(q);
-    
-    if (food) {
-      res.json(food);
-    } else {
-      res.status(404).json({ error: 'Food not found in USDA database' });
-    }
+    const result = await searchUSDAFoods(q, 10);
+    res.json(result);
   } catch (error) {
     console.error('USDA search error:', error);
     res.status(500).json({ error: 'Failed to search USDA database' });
+  }
+});
+
+/**
+ * GET /api/foods/usda/:fdcId
+ * Get specific USDA food nutrient data by FDC ID
+ * Returns: { error?, nutrients: { fdcId, name, calories, protein, fat, carbs, dataType } }
+ */
+app.get('/api/foods/usda/:fdcId', verifyIdToken, async (req, res) => {
+  try {
+    const fdcId = req.params.fdcId;
+    
+    if (!fdcId || isNaN(fdcId)) {
+      return res.status(400).json({ error: 'Valid FDC ID required' });
+    }
+
+    const result = await getUSDAFoodById(fdcId);
+    
+    if (result.error) {
+      return res.status(404).json(result);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('USDA food fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch food data' });
   }
 });
 
