@@ -4,7 +4,7 @@ import 'dotenv/config';
 import db from './db.js';
 import { auth } from './firebase.js';
 import { verifyIdToken, errorHandler } from './middleware.js';
-import { searchUSDAFoods, getUSDAFoodById, adjustNutrients } from './usda.js';
+import { searchUSDAFoods, adjustNutrients } from './usda.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -340,32 +340,6 @@ app.get('/api/foods/search/usda', verifyIdToken, async (req, res) => {
   } catch (error) {
     console.error('USDA search error:', error);
     res.status(500).json({ error: 'Failed to search USDA database' });
-  }
-});
-
-/**
- * GET /api/foods/usda/:fdcId
- * Get specific USDA food nutrient data by FDC ID
- * Returns: { error?, nutrients: { fdcId, name, calories, protein, fat, carbs, dataType } }
- */
-app.get('/api/foods/usda/:fdcId', verifyIdToken, async (req, res) => {
-  try {
-    const fdcId = req.params.fdcId;
-    
-    if (!fdcId || isNaN(fdcId)) {
-      return res.status(400).json({ error: 'Valid FDC ID required' });
-    }
-
-    const result = await getUSDAFoodById(fdcId);
-    
-    if (result.error) {
-      return res.status(404).json(result);
-    }
-
-    res.json(result);
-  } catch (error) {
-    console.error('USDA food fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch food data' });
   }
 });
 

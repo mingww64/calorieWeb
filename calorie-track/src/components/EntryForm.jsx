@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getFoodSuggestions } from '../api';
-import USDAFoodSearch from './USDAFoodSearch';
+import { useState, useEffect } from 'react';
+import { getFoodSuggestions, searchUSDAFoods } from '../api';
 
 function EntryForm({ onAdd }) {
   const [name, setName] = useState('');
@@ -9,21 +8,32 @@ function EntryForm({ onAdd }) {
   const [protein, setProtein] = useState('');
   const [fat, setFat] = useState('');
   const [carbs, setCarbs] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState([]); // Local autocomplete
+  const [usdaSuggestions, setUsdaSuggestions] = useState([]); // USDA search results
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showUSDASearch, setShowUSDASearch] = useState(false);
-  const [macrosSource, setMacrosSource] = useState(''); // 'usda', 'manual', or ''
+  const [selectedFood, setSelectedFood] = useState(null); // Selected food with source info
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [searchingUSDA, setSearchingUSDA] = useState(false);
 
-  // Fetch food suggestions on name change
+  // Combined search: local autocomplete + USDA results
   useEffect(() => {
     if (name.length > 1) {
       const fetchSuggestions = async () => {
         try {
-          const results = await getFoodSuggestions(name, 5);
-          setSuggestions(results);
+          // Get local autocomplete suggestions
+          const localResults = await getFoodSuggestions(name, 3);
+          setSuggestions(localResults);
+
+          // Search USDA database
+          setSearchingUSDA(true);
+          const usdaResults = await searchUSDAFoods(name, 7);
+          setUsdaSuggestions(usdaResults.suggestions || []);
+          setSearchingUSDA(false);
+          
           setShowSuggestions(true);
         } catch (error) {
           console.warn('Failed to fetch suggestions:', error);
+          setSearchingUSDA(false);
         }
       };
 
@@ -31,180 +41,266 @@ function EntryForm({ onAdd }) {
       return () => clearTimeout(timer);
     } else {
       setSuggestions([]);
+      setUsdaSuggestions([]);
       setShowSuggestions(false);
     }
   }, [name]);
 
-  const handleSelectSuggestion = (suggestion) => {
+  // Handle selecting a local food suggestion
+  const handleSuggestionSelect = (suggestion) => {
     setName(suggestion.name);
-    setCalories(suggestion.calories);
-    if (suggestion.protein) {
-      setProtein(suggestion.protein);
-      setFat(suggestion.fat);
-      setCarbs(suggestion.carbs);
-      setMacrosSource('cached');
-    }
+    setCalories(suggestion.calories?.toString() || '');
+    setProtein(suggestion.protein?.toString() || '');
+    setFat(suggestion.fat?.toString() || '');
+    setCarbs(suggestion.carbs?.toString() || '');
+    setSelectedFood({ type: 'local', data: suggestion });
     setShowSuggestions(false);
   };
 
-  const handleUSDAFoodSelect = (foodData) => {
-    setName(foodData.name);
-    setCalories(foodData.calories);
-    setProtein(foodData.protein);
-    setFat(foodData.fat);
-    setCarbs(foodData.carbs);
-    setMacrosSource('usda');
-    setShowUSDASearch(false);
+  // Handle selecting a USDA food with nutrition data
+  const handleUSDASelect = (food) => {
+    setName(food.name);
+    setCalories(food.calories?.toString() || '');
+    setProtein(food.protein?.toString() || '');
+    setFat(food.fat?.toString() || '');
+    setCarbs(food.carbs?.toString() || '');
+    setSelectedFood({ type: 'usda', data: food });
+    setShowSuggestions(false);
+    setShowManualEntry(false);
   };
 
+  // Show manual entry form
   const handleManualEntry = () => {
-    setMacrosSource('manual');
+    setShowSuggestions(false);
+    setShowManualEntry(true);
+    setSelectedFood({ type: 'manual' });
+  };
+
+  // Clear selection and show suggestions again
+  const handleNameChange = (e) => {
+    const newName = e.target.value;
+    setName(newName);
+    
+    // Clear nutrition data when name changes
+    if (newName !== selectedFood?.data?.name) {
+      setCalories('');
+      setProtein('');
+      setFat('');
+      setCarbs('');
+      setSelectedFood(null);
+      setShowManualEntry(false);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (name && calories && protein && fat && carbs) {
       onAdd(name, quantity || '1', parseInt(calories), parseFloat(protein), parseFloat(fat), parseFloat(carbs));
+      
+      // Reset form
       setName('');
       setQuantity('');
       setCalories('');
       setProtein('');
       setFat('');
       setCarbs('');
-      setMacrosSource('');
+      setSuggestions([]);
+      setUsdaSuggestions([]);
+      setShowSuggestions(false);
+      setSelectedFood(null);
+      setShowManualEntry(false);
     }
   };
 
-  return (
-    <div className="entry-form-container">
-      <form className="entry-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder="Food name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onFocus={() => name.length > 1 && setShowSuggestions(true)}
-            required
-          />
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="suggestions">
-              {suggestions.map((sugg, idx) => (
-                <div
-                  key={idx}
-                  className="suggestion-item"
-                  onClick={() => handleSelectSuggestion(sugg)}
-                >
-                  <div className="suggestion-main">
-                    <strong>{sugg.name}</strong> - {sugg.calories} cal
-                  </div>
-                  {sugg.protein && (
-                    <div className="suggestion-macros">
-                      P: {sugg.protein}g | F: {sugg.fat}g | C: {sugg.carbs}g
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+  const isFormValid = name && calories && protein && fat && carbs;
+  const hasNutritionData = calories || protein || fat || carbs;
 
+  return (
+    <form onSubmit={handleSubmit} className="entry-form">
+      <div className="form-group">
+        <label htmlFor="name">Food Name</label>
         <input
           type="text"
-          placeholder="Quantity"
+          id="name"
+          value={name}
+          onChange={handleNameChange}
+          placeholder="Type a food name..."
+          required
+          autoComplete="off"
+        />
+        
+        {/* Food Suggestions */}
+        {showSuggestions && (suggestions.length > 0 || usdaSuggestions.length > 0) && (
+          <div className="food-suggestions-dropdown">
+            {/* Local suggestions first */}
+            {suggestions.length > 0 && (
+              <div className="suggestion-section">
+                <div className="suggestion-header">Recent Foods</div>
+                {suggestions.map((suggestion, index) => (
+                  <div
+                    key={`local-${index}`}
+                    className="suggestion-item local-suggestion"
+                    onClick={() => handleSuggestionSelect(suggestion)}
+                  >
+                    <div className="food-name">{suggestion.name}</div>
+                    <div className="food-meta">
+                      <span className="calories">{suggestion.calories} cal</span>
+                      {suggestion.protein && (
+                        <span className="macros">
+                          P:{suggestion.protein}g F:{suggestion.fat}g C:{suggestion.carbs}g
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* USDA suggestions */}
+            {usdaSuggestions.length > 0 && (
+              <div className="suggestion-section">
+                <div className="suggestion-header">
+                  USDA Database {searchingUSDA && <span className="loading">Searching...</span>}
+                </div>
+                {usdaSuggestions.map((food) => (
+                  <div
+                    key={`usda-${food.fdcId}`}
+                    className={`suggestion-item usda-suggestion ${!food.hasNutrients ? 'limited-nutrition' : ''}`}
+                    onClick={() => handleUSDASelect(food)}
+                  >
+                    <div className="food-name">{food.name}</div>
+                    <div className="food-meta">
+                      <span className="food-type">{food.dataType}</span>
+                      {food.brandOwner && <span className="brand-owner"> • {food.brandOwner}</span>}
+                      {food.hasNutrients ? (
+                        <span className="nutrition-preview">
+                          {food.calories}cal • P:{food.protein}g F:{food.fat}g C:{food.carbs}g
+                        </span>
+                      ) : (
+                        <span className="nutrition-warning"> • Limited nutrition data</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Manual entry option */}
+            <div className="suggestion-section">
+              <div
+                className="suggestion-item manual-suggestion"
+                onClick={handleManualEntry}
+              >
+                <div className="food-name">📝 Enter nutrition data manually</div>
+                <div className="food-meta">For custom foods or if not found above</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="quantity">Quantity</label>
+        <input
+          type="text"
+          id="quantity"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
+          placeholder="1 serving, 100g, 1 cup..."
         />
+      </div>
 
-        <input
-          type="number"
-          placeholder="Calories"
-          value={calories}
-          onChange={(e) => setCalories(e.target.value)}
-          required
-        />
-
-        {/* Macro nutrition section */}
-        {macrosSource === '' && name && calories && (
-          <div className="macros-prompt">
-            <p>Nutrition data required. Choose an option:</p>
-            <div className="macros-buttons">
-              <button type="button" onClick={() => setShowUSDASearch(true)} className="usda-search-btn">
-                🔍 Search USDA Database
-              </button>
-              <button type="button" onClick={handleManualEntry} className="manual-entry-btn">
-                ✏️ Enter Manually
-              </button>
-            </div>
+      {/* Nutrition Data Section */}
+      {(hasNutritionData || showManualEntry || selectedFood) && (
+        <div className="nutrition-section">
+          <div className="nutrition-header">
+            <h4>Nutrition Information</h4>
+            {selectedFood && (
+              <span className="data-source">
+                {selectedFood.type === 'usda' && '🔬 USDA Data'}
+                {selectedFood.type === 'local' && '💾 Saved Data'}
+                {selectedFood.type === 'manual' && '✏️ Manual Entry'}
+              </span>
+            )}
           </div>
-        )}
-
-        {macrosSource === 'manual' && (
-          <div className="manual-macros">
-            <h4>Enter nutrition data manually (per serving):</h4>
-            <div className="macros-inputs">
+          
+          <div className="nutrition-inputs">
+            <div className="form-group">
+              <label htmlFor="calories">Calories</label>
               <input
                 type="number"
-                step="0.1"
-                placeholder="Protein (g)"
+                id="calories"
+                value={calories}
+                onChange={(e) => setCalories(e.target.value)}
+                placeholder="0"
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="protein">Protein (g)</label>
+              <input
+                type="number"
+                id="protein"
                 value={protein}
                 onChange={(e) => setProtein(e.target.value)}
+                placeholder="0"
+                step="0.1"
                 required
               />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="fat">Fat (g)</label>
               <input
                 type="number"
-                step="0.1"
-                placeholder="Fat (g)"
+                id="fat"
                 value={fat}
                 onChange={(e) => setFat(e.target.value)}
+                placeholder="0"
+                step="0.1"
                 required
               />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="carbs">Carbs (g)</label>
               <input
                 type="number"
-                step="0.1"
-                placeholder="Carbs (g)"
+                id="carbs"
                 value={carbs}
                 onChange={(e) => setCarbs(e.target.value)}
+                placeholder="0"
+                step="0.1"
                 required
               />
             </div>
-            <button type="button" onClick={() => setMacrosSource('')} className="change-method-btn">
-              Use USDA Search Instead
-            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {(macrosSource === 'usda' || macrosSource === 'cached') && (
-          <div className="macros-display">
-            <h4>Nutrition data {macrosSource === 'usda' ? '(from USDA)' : '(cached)'}:</h4>
-            <div className="macros-summary">
-              <span>Protein: {protein}g</span>
-              <span>Fat: {fat}g</span>
-              <span>Carbs: {carbs}g</span>
-            </div>
-            <button type="button" onClick={() => setMacrosSource('')} className="change-method-btn">
-              Change Nutrition Data
-            </button>
-          </div>
-        )}
-
-        <button 
-          type="submit" 
-          disabled={!name || !calories || !protein || !fat || !carbs}
-          className={(!name || !calories || !protein || !fat || !carbs) ? 'disabled' : ''}
-        >
+      <div className="form-actions">
+        <button type="submit" disabled={!isFormValid}>
           Add Entry
         </button>
-      </form>
-
-      {showUSDASearch && (
-        <USDAFoodSearch
-          initialQuery={name}
-          onFoodSelect={handleUSDAFoodSelect}
-          onCancel={() => setShowUSDASearch(false)}
-        />
-      )}
-    </div>
+        {selectedFood && (
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => {
+              setSelectedFood(null);
+              setShowManualEntry(false);
+              setCalories('');
+              setProtein('');
+              setFat('');
+              setCarbs('');
+            }}
+          >
+            Clear Selection
+          </button>
+        )}
+      </div>
+    </form>
   );
 }
 
