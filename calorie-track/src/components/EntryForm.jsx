@@ -17,6 +17,11 @@ function EntryForm({ onAdd }) {
 
   // Combined search: local autocomplete + USDA results
   useEffect(() => {
+    // Don't search if a food is already selected and name matches
+    if (selectedFood && (name === selectedFood.data?.name || name === selectedFood.data?.description)) {
+      return;
+    }
+    
     if (name.length > 1) {
       const fetchSuggestions = async () => {
         try {
@@ -44,28 +49,40 @@ function EntryForm({ onAdd }) {
       setUsdaSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [name]);
+  }, [name, selectedFood]);
 
   // Handle selecting a local food suggestion
   const handleSuggestionSelect = (suggestion) => {
+    // Clear search state first to prevent reappearing
+    setShowSuggestions(false);
+    setSearchingUSDA(false);
+    setSuggestions([]);
+    setUsdaSuggestions([]);
+    
+    // Set the food data
     setName(suggestion.name);
     setCalories(suggestion.calories?.toString() || '');
     setProtein(suggestion.protein?.toString() || '');
     setFat(suggestion.fat?.toString() || '');
     setCarbs(suggestion.carbs?.toString() || '');
     setSelectedFood({ type: 'local', data: suggestion });
-    setShowSuggestions(false);
   };
 
   // Handle selecting a USDA food with nutrition data
   const handleUSDASelect = (food) => {
+    // Clear search state first to prevent reappearing
+    setShowSuggestions(false);
+    setSearchingUSDA(false);
+    setSuggestions([]);
+    setUsdaSuggestions([]);
+    
+    // Set the food data
     setName(food.name);
     setCalories(food.calories?.toString() || '');
     setProtein(food.protein?.toString() || '');
     setFat(food.fat?.toString() || '');
     setCarbs(food.carbs?.toString() || '');
     setSelectedFood({ type: 'usda', data: food });
-    setShowSuggestions(false);
     setShowManualEntry(false);
   };
 
