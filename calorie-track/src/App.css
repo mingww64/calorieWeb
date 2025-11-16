@@ -335,6 +335,14 @@
   background-color: #138496 !important;
 }
 
+.trends-btn {
+  background-color: #28a745 !important;
+}
+
+.trends-btn:hover {
+  background-color: #218838 !important;
+}
+
 .auth-form {
   max-width: 400px;
   margin: 2rem auto;
@@ -1012,6 +1020,26 @@
   position: sticky;
   top: 0;
   z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.usda-note {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.adjusted-note {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: #059669;
+  font-style: italic;
+  margin-left: 0.25rem;
 }
 
 .suggestion-header .loading {
@@ -1370,4 +1398,381 @@ button.disabled {
 
 button.disabled:hover {
   background-color: #e9ecef !important;
+}
+
+/* Historical Trends Styles */
+.historical-trends {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.trends-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.trends-header h2 {
+  color: #374151;
+  margin: 0;
+}
+
+.date-range-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-range-selector label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.date-range-selector select {
+  padding: 0.5rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.trend-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.summary-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.chart-container {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.chart-header h3 {
+  color: #374151;
+  margin: 0;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chart-controls button {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  color: #6b7280;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.chart-controls button:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.chart-controls button.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.chart-area {
+  min-height: 250px;
+  padding: 1rem 0;
+  overflow-x: auto;
+}
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-width: 100%;
+  height: 240px;
+  padding: 1rem 0;
+}
+
+.chart-bar-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.chart-bar {
+  width: 100%;
+  max-width: 40px;
+  background: #e5e7eb;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-height: 4px;
+}
+
+.chart-bar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.bar-value {
+  position: absolute;
+  top: -25px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  background: rgba(255,255,255,0.9);
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chart-bar:hover .bar-value {
+  opacity: 1;
+}
+
+.chart-label {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Stacked bars for macros */
+.stacked-bar {
+  width: 100%;
+  max-width: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.bar-segment {
+  width: 100%;
+  margin-bottom: 1px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  min-height: 2px;
+}
+
+.protein-bar, .protein-color {
+  background: #ef4444;
+}
+
+.fat-bar, .fat-color {
+  background: #f59e0b;
+}
+
+.carbs-bar, .carbs-color {
+  background: #10b981;
+}
+
+/* Combined chart */
+.combined-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 240px;
+  padding: 1rem 0;
+}
+
+.combined-bar-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.combined-bar {
+  width: 100%;
+  max-width: 40px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.calories-line {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.calories-line:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.macro-indicators {
+  display: flex;
+  gap: 2px;
+  margin-top: 0.25rem;
+}
+
+.macro-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Chart Legend */
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.legend-items {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+/* Data Table */
+.trend-table {
+  margin-top: 2rem;
+}
+
+.trend-table h4 {
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.trend-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.trend-table th,
+.trend-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.trend-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.85rem;
+}
+
+.trend-table td {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.trend-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .trends-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .trend-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .chart-controls {
+    justify-content: center;
+  }
+  
+  .legend-items {
+    justify-content: center;
+  }
+}
+
+.loading-message,
+.empty-message {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin: 1rem 0;
 }

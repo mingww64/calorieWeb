@@ -15,6 +15,47 @@ function EntryForm({ onAdd }) {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [searchingUSDA, setSearchingUSDA] = useState(false);
 
+  // Calculate adjusted nutrition values based on quantity (only for weight units)
+  const getAdjustedNutrition = (baseNutrition, inputQuantity) => {
+    if (!selectedFood || selectedFood.type !== 'usda') {
+      return baseNutrition;
+    }
+    
+    // Only adjust if quantity has weight suffix (g, kg, mg)
+    const weightMatch = inputQuantity.toString().toLowerCase().match(/(\d+\.?\d*)\s*(g|kg|mg)\b/);
+    if (!weightMatch) {
+      return baseNutrition; // No weight unit found, return original values
+    }
+    
+    const quantityNum = parseFloat(weightMatch[1]);
+    const unit = weightMatch[2];
+    
+    // Convert to grams
+    let gramsQuantity;
+    switch (unit) {
+      case 'kg':
+        gramsQuantity = quantityNum * 1000;
+        break;
+      case 'mg':
+        gramsQuantity = quantityNum / 1000;
+        break;
+      case 'g':
+      default:
+        gramsQuantity = quantityNum;
+        break;
+    }
+    
+    // USDA data is per 100g, so adjust proportionally
+    const ratio = gramsQuantity / 100;
+    
+    return {
+      calories: Math.round(baseNutrition.calories * ratio * 10) / 10,
+      protein: Math.round(baseNutrition.protein * ratio * 10) / 10,
+      fat: Math.round(baseNutrition.fat * ratio * 10) / 10,
+      carbs: Math.round(baseNutrition.carbs * ratio * 10) / 10
+    };
+  };
+
   // Combined search: local autocomplete + USDA results
   useEffect(() => {
     // Don't search if a food is already selected and name matches
@@ -78,11 +119,31 @@ function EntryForm({ onAdd }) {
     
     // Set the food data
     setName(food.name);
-    setCalories(food.calories?.toString() || '');
-    setProtein(food.protein?.toString() || '');
-    setFat(food.fat?.toString() || '');
-    setCarbs(food.carbs?.toString() || '');
-    setSelectedFood({ type: 'usda', data: food });
+    
+    // Store the base USDA data
+    const baseData = {
+      calories: food.calories || 0,
+      protein: food.protein || 0,
+      fat: food.fat || 0,
+      carbs: food.carbs || 0
+    };
+    
+    // If quantity is already entered, adjust values
+    if (quantity) {
+      const adjusted = getAdjustedNutrition(baseData, quantity);
+      setCalories(adjusted.calories.toString());
+      setProtein(adjusted.protein.toString());
+      setFat(adjusted.fat.toString());
+      setCarbs(adjusted.carbs.toString());
+    } else {
+      // Use base values (per 100g)
+      setCalories(baseData.calories.toString());
+      setProtein(baseData.protein.toString());
+      setFat(baseData.fat.toString());
+      setCarbs(baseData.carbs.toString());
+    }
+    
+    setSelectedFood({ type: 'usda', data: food, baseNutrition: baseData });
     setShowManualEntry(false);
   };
 
@@ -189,10 +250,10 @@ function EntryForm({ onAdd }) {
                   >
                     <div className="food-name">{suggestion.name}</div>
                     <div className="food-meta">
-                      <span className="calories">{suggestion.calories} cal</span>
+                      <span className="calories">{suggestion.calories} kcal</span>
                       {suggestion.protein && (
                         <span className="macros">
-                          P:{suggestion.protein}g F:{suggestion.fat}g C:{suggestion.carbs}g
+                          P: {suggestion.protein}g • F: {suggestion.fat}g • C: {suggestion.carbs}g
                         </span>
                       )}
                     </div>
@@ -206,6 +267,7 @@ function EntryForm({ onAdd }) {
               <div className="suggestion-section">
                 <div className="suggestion-header">
                   USDA Database {searchingUSDA && <span className="loading">Searching...</span>}
+                  <span className="usda-note">• Nutrition values per 100g</span>
                 </div>
                 {usdaSuggestions.map((food) => (
                   <div
@@ -219,7 +281,7 @@ function EntryForm({ onAdd }) {
                       {food.brandOwner && <span className="brand-owner"> • {food.brandOwner}</span>}
                       {food.hasNutrients ? (
                         <span className="nutrition-preview">
-                          {food.calories}cal • P:{food.protein}g F:{food.fat}g C:{food.carbs}g
+                          {food.calories} kcal • P: {food.protein}g • F: {food.fat}g • C: {food.carbs}g
                         </span>
                       ) : (
                         <span className="nutrition-warning"> • Limited nutrition data</span>
@@ -250,8 +312,23 @@ function EntryForm({ onAdd }) {
           type="text"
           id="quantity"
           value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          placeholder="1 serving, 100g, 1 cup..."
+          onChange={(e) => {
+            const newQuantity = e.target.value;
+            setQuantity(newQuantity);
+            
+            // Auto-adjust USDA values only when quantity has weight suffix (g, kg, mg)
+            if (selectedFood && selectedFood.type === 'usda' && selectedFood.baseNutrition && newQuantity) {
+              const weightMatch = newQuantity.toLowerCase().match(/(\d+\.?\d*)\s*(g|kg|mg)\b/);
+              if (weightMatch) {
+                const adjusted = getAdjustedNutrition(selectedFood.baseNutrition, newQuantity);
+                setCalories(adjusted.calories.toString());
+                setProtein(adjusted.protein.toString());
+                setFat(adjusted.fat.toString());
+                setCarbs(adjusted.carbs.toString());
+              }
+            }
+          }}
+          placeholder={selectedFood?.type === 'usda' ? "Enter weight (e.g., 150g, 0.5kg, 200mg)" : "1 serving, 100g, 1 cup..."}
         />
       </div>
 
@@ -262,7 +339,27 @@ function EntryForm({ onAdd }) {
             <h4>Nutrition Information</h4>
             {selectedFood && (
               <span className="data-source">
-                {selectedFood.type === 'usda' && '🔬 USDA Data'}
+                {selectedFood.type === 'usda' && (
+                  <>
+                    🔬 USDA Data 
+                    {quantity ? (
+                      (() => {
+                        const weightMatch = quantity.toString().toLowerCase().match(/(\d+\.?\d*)\s*(g|kg|mg)\b/);
+                        if (weightMatch) {
+                          const quantityNum = parseFloat(weightMatch[1]);
+                          const unit = weightMatch[2];
+                          return (
+                            <span className="adjusted-note">(adjusted for {quantityNum}{unit})</span>
+                          );
+                        } else {
+                          return <span>(per 100g - enter weight to auto-adjust)</span>;
+                        }
+                      })()
+                    ) : (
+                      <span>(per 100g)</span>
+                    )}
+                  </>
+                )}
                 {selectedFood.type === 'local' && '💾 Saved Data'}
                 {selectedFood.type === 'manual' && '✏️ Manual Entry'}
               </span>
