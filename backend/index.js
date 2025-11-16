@@ -198,7 +198,7 @@ app.post('/api/entries', verifyIdToken, async (req, res, next) => {
 app.put('/api/entries/:id', verifyIdToken, (req, res, next) => {
   try {
     const id = Number(req.params.id);
-    const { name, quantity, calories, date } = req.body;
+    const { name, quantity, calories, protein, fat, carbs, date } = req.body;
 
     // Verify ownership
     const entry = db.prepare('SELECT userId FROM entries WHERE id = ?').get(id);
@@ -206,12 +206,41 @@ app.put('/api/entries/:id', verifyIdToken, (req, res, next) => {
       return res.status(403).json({ error: 'Forbidden: you do not own this entry' });
     }
 
+    // Validate required fields
+    if (!name || calories == null) {
+      return res.status(400).json({ error: 'name and calories required' });
+    }
+
+    // If nutrition data is provided, validate it
+    if (protein != null || fat != null || carbs != null) {
+      if (protein == null || fat == null || carbs == null) {
+        return res.status(400).json({ 
+          error: 'All macronutrients required (protein, fat, carbs) or none',
+          missingFields: {
+            protein: protein == null,
+            fat: fat == null, 
+            carbs: carbs == null
+          }
+        });
+      }
+    }
+
     const now = new Date().toISOString();
-    db.prepare(`
-      UPDATE entries
-      SET name = ?, quantity = ?, calories = ?, date = ?, updatedAt = ?
-      WHERE id = ?
-    `).run(name, quantity, Number(calories), date, now, id);
+    
+    // Update with or without nutrition data
+    if (protein != null && fat != null && carbs != null) {
+      db.prepare(`
+        UPDATE entries
+        SET name = ?, quantity = ?, calories = ?, protein = ?, fat = ?, carbs = ?, date = ?, updatedAt = ?
+        WHERE id = ?
+      `).run(name, quantity, Number(calories), Number(protein), Number(fat), Number(carbs), date, now, id);
+    } else {
+      db.prepare(`
+        UPDATE entries
+        SET name = ?, quantity = ?, calories = ?, date = ?, updatedAt = ?
+        WHERE id = ?
+      `).run(name, quantity, Number(calories), date, now, id);
+    }
 
     const updated = db.prepare('SELECT * FROM entries WHERE id = ?').get(id);
     res.json(updated);

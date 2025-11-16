@@ -5,6 +5,9 @@ function EditEntryForm({ entry, onSave, onCancel }) {
   const [name, setName] = useState(entry.name);
   const [quantity, setQuantity] = useState(entry.quantity);
   const [calories, setCalories] = useState(entry.calories);
+  const [protein, setProtein] = useState(entry.protein || 0);
+  const [fat, setFat] = useState(entry.fat || 0);
+  const [carbs, setCarbs] = useState(entry.carbs || 0);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -32,13 +35,32 @@ function EditEntryForm({ entry, onSave, onCancel }) {
   const handleSelectSuggestion = (suggestion) => {
     setName(suggestion.name);
     setCalories(suggestion.calories);
+    if (suggestion.protein !== undefined) {
+      setProtein(suggestion.protein);
+      setFat(suggestion.fat);
+      setCarbs(suggestion.carbs);
+    }
     setShowSuggestions(false);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (name && calories) {
-      onSave(name, quantity, parseInt(calories), entry.id);
+    const hasName = name.trim() !== '';
+    const hasCalories = calories !== '' && calories !== null && calories !== undefined;
+    const hasProtein = protein !== '' && protein !== null && protein !== undefined;
+    const hasFat = fat !== '' && fat !== null && fat !== undefined;
+    const hasCarbs = carbs !== '' && carbs !== null && carbs !== undefined;
+    
+    if (hasName && hasCalories && hasProtein && hasFat && hasCarbs) {
+      onSave(
+        name.trim(), 
+        quantity, 
+        parseInt(calories) || 0, 
+        parseFloat(protein) || 0, 
+        parseFloat(fat) || 0, 
+        parseFloat(carbs) || 0, 
+        entry.id
+      );
     }
   };
 
@@ -47,8 +69,10 @@ function EditEntryForm({ entry, onSave, onCancel }) {
       <h3>Edit Entry</h3>
       <form className="entry-form" onSubmit={handleSubmit}>
         <div className="form-group">
+          <label htmlFor="edit-name">Food Name</label>
           <input
             type="text"
+            id="edit-name"
             placeholder="Food name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -76,23 +100,82 @@ function EditEntryForm({ entry, onSave, onCancel }) {
             </div>
           )}
         </div>
-        <input
-          type="text"
-          placeholder="Quantity"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Calories"
-          value={calories}
-          onChange={(e) => setCalories(e.target.value)}
-          required
-        />
-        <button type="submit">Update Entry</button>
-        <button type="button" onClick={onCancel}>
-          Cancel
-        </button>
+        
+        <div className="form-group">
+          <label htmlFor="edit-quantity">Quantity</label>
+          <input
+            type="text"
+            id="edit-quantity"
+            placeholder="Quantity"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
+        </div>
+        
+        <div className="nutrition-section">
+          <div className="nutrition-header">
+            <h4>Nutrition Information</h4>
+          </div>
+          <div className="nutrition-inputs">
+            <div className="form-group">
+              <label htmlFor="edit-calories">Calories</label>
+              <input
+                type="number"
+                id="edit-calories"
+                placeholder="Calories"
+                value={calories}
+                onChange={(e) => setCalories(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="edit-protein">Protein (g)</label>
+              <input
+                type="number"
+                id="edit-protein"
+                placeholder="Protein"
+                value={protein}
+                onChange={(e) => setProtein(e.target.value)}
+                step="0.1"
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="edit-fat">Fat (g)</label>
+              <input
+                type="number"
+                id="edit-fat"
+                placeholder="Fat"
+                value={fat}
+                onChange={(e) => setFat(e.target.value)}
+                step="0.1"
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="edit-carbs">Carbs (g)</label>
+              <input
+                type="number"
+                id="edit-carbs"
+                placeholder="Carbs"
+                value={carbs}
+                onChange={(e) => setCarbs(e.target.value)}
+                step="0.1"
+                required
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="form-actions">
+          <button type="submit">Update Entry</button>
+          <button type="button" className="secondary" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );
