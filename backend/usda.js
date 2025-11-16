@@ -140,7 +140,7 @@ function extractNutrients(foodData) {
           nutrients.calories = Math.round(value / 4.184);
         }
         
-        console.log(`  MATCHED: ${nutrient.nutrientName || 'Unknown nutrient'} (${nutrientNumber}): ${value} ${nutrient.unitName} -> ${field}`);
+        console.log(`  MATCHED: ${nutrient.nutrientName || 'Unknown nutrient'} (${nutrientNumber}): ${value} ${nutrient.unitName || ''} -> ${field}`);
       }
     }
   }
