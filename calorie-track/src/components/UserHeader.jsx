@@ -1,4 +1,5 @@
 import React from 'react';
+import './UserHeader.css';
 
 function UserHeader({ user, onSignOut, onSettings, onTrends }) {
   const displayName = user.displayName || user.email;

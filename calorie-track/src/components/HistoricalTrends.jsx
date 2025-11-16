@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSummary } from '../api';
+import './HistoricalTrends.css';
 
 function HistoricalTrends() {
   const [dateRange, setDateRange] = useState(7); // Default to 7 days

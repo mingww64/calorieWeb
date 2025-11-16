@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import './Analysis.css';
 
 function Analysis({ entries }) {
   const CALORIE_GOAL = 2000; // Default daily goal

@@ -1,0 +1,131 @@
+/* Date Selector Component Styles */
+.date-selector {
+  margin: 1rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.date-selector input {
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-family: inherit;
+}
+
+.nav-btn {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0.5rem 1rem !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.nav-btn:disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.today-btn {
+  background-color: #22c55e !important;
+  color: white !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.8rem !important;
+  margin-left: 0.5rem !important;
+}
+
+.today-btn:hover {
+  background-color: #16a34a !important;
+}
+
+.date-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.date-picker-wrapper {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.date-text {
+  font-weight: 600;
+  color: inherit;
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: inline-block;
+  border: 1px solid transparent;
+}
+
+.date-picker-wrapper:hover .date-text {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.date-input-hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+@media (prefers-color-scheme: light) {
+  .date-selector input {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #1f2937;
+  }
+
+  .nav-btn {
+    border: 1px solid #e5e7eb !important;
+    color: #6b7280 !important;
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    background-color: #f9fafb !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.3 !important;
+    border-color: #e5e7eb !important;
+    color: #9ca3af !important;
+  }
+
+  .date-picker-wrapper:hover .date-text {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+  }
+}
+
+@media (max-width: 640px) {
+  .date-selector {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .nav-btn {
+    width: 100%;
+  }
+}
