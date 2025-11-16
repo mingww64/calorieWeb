@@ -100,11 +100,23 @@ app.get('/api/me', verifyIdToken, (req, res) => {
 app.get('/api/entries', verifyIdToken, (req, res) => {
   const date = req.query.date || new Date().toISOString().slice(0, 10);
   const entries = db.prepare(`
-    SELECT id, userId, name, quantity, calories, date, createdAt, updatedAt
+    SELECT id, userId, name, quantity, calories, protein, fat, carbs, date, createdAt, updatedAt
     FROM entries
     WHERE userId = ? AND date = ?
     ORDER BY createdAt DESC
   `).all(req.user.uid, date);
+  
+  console.log(`Retrieved ${entries.length} entries for ${date}:`, 
+    entries.map(e => ({
+      id: e.id, 
+      name: e.name, 
+      calories: e.calories, 
+      protein: e.protein, 
+      fat: e.fat, 
+      carbs: e.carbs
+    }))
+  );
+  
   res.json(entries);
 });
 
@@ -117,7 +129,12 @@ app.get('/api/summary', verifyIdToken, (req, res) => {
   const endDate = req.query.endDate || new Date().toISOString().slice(0, 10);
 
   const summary = db.prepare(`
-    SELECT date, SUM(calories) as totalCalories, COUNT(*) as entryCount
+    SELECT date, 
+           SUM(calories) as totalCalories, 
+           SUM(protein) as totalProtein,
+           SUM(fat) as totalFat,
+           SUM(carbs) as totalCarbs,
+           COUNT(*) as entryCount
     FROM entries
     WHERE userId = ? AND date BETWEEN ? AND ?
     GROUP BY date
@@ -156,9 +173,9 @@ app.post('/api/entries', verifyIdToken, async (req, res, next) => {
     const entryDate = date || now.slice(0, 10);
 
     const info = db.prepare(`
-      INSERT INTO entries (userId, name, quantity, calories, date, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(req.user.uid, name, quantity || '', Number(calories), entryDate, now, now);
+      INSERT INTO entries (userId, name, quantity, calories, protein, fat, carbs, date, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(req.user.uid, name, quantity || '', Number(calories), Number(protein), Number(fat), Number(carbs), entryDate, now, now);
 
     // Track this food for autocomplete with nutrients
     try {

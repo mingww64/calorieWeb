@@ -35,6 +35,31 @@ db.prepare(`
   )
 `).run();
 
+// Add nutrition columns to entries table if they don't exist (for backward compatibility)
+const entriesTableInfo = db.prepare("PRAGMA table_info(entries)").all();
+const entriesColumnNames = entriesTableInfo.map(col => col.name);
+
+if (!entriesColumnNames.includes('protein')) {
+  db.prepare('ALTER TABLE entries ADD COLUMN protein REAL').run();
+  console.log('Added protein column to entries table');
+}
+if (!entriesColumnNames.includes('fat')) {
+  db.prepare('ALTER TABLE entries ADD COLUMN fat REAL').run();
+  console.log('Added fat column to entries table');
+}
+if (!entriesColumnNames.includes('carbs')) {
+  db.prepare('ALTER TABLE entries ADD COLUMN carbs REAL').run();
+  console.log('Added carbs column to entries table');
+}
+
+// Set default values for existing entries that have NULL nutrition data
+if (!entriesColumnNames.includes('protein')) {
+  db.prepare('UPDATE entries SET protein = 0 WHERE protein IS NULL').run();
+  db.prepare('UPDATE entries SET fat = 0 WHERE fat IS NULL').run();
+  db.prepare('UPDATE entries SET carbs = 0 WHERE carbs IS NULL').run();
+  console.log('Initialized nutrition data for existing entries');
+}
+
 // Create index for faster queries
 db.prepare(`
   CREATE INDEX IF NOT EXISTS idx_entries_userId_date ON entries(userId, date)
