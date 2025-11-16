@@ -27,9 +27,13 @@ export async function searchUSDAFood(foodName) {
   }
 
   try {
-    // Search for the food
-    const searchUrl = `${USDA_API_URL}/foods/search?query=${encodeURIComponent(foodName)}&pageSize=1&api_key=${USDA_API_KEY}`;
-    const searchResponse = await fetch(searchUrl);
+    // Search for the food with explicit nutrients parameter
+    const searchUrl = new URL(`${USDA_API_URL}/foods/search`);
+    searchUrl.searchParams.set('query', foodName);
+    searchUrl.searchParams.set('pageSize', '1');
+    searchUrl.searchParams.set('api_key', USDA_API_KEY);
+
+    const searchResponse = await fetch(searchUrl.toString());
 
     if (!searchResponse.ok) {
       console.error(`USDA API search error: ${searchResponse.status}`);
@@ -44,23 +48,16 @@ export async function searchUSDAFood(foodName) {
     }
 
     const food = searchData.foods[0];
-    const fdcId = food.fdcId;
+    const nutrients = extractNutrients(food);
 
-    // Get detailed nutrient data
-    const detailUrl = `${USDA_API_URL}/foods/${fdcId}?api_key=${USDA_API_KEY}`;
-    const detailResponse = await fetch(detailUrl);
-
-    if (!detailResponse.ok) {
-      console.error(`USDA API detail error: ${detailResponse.status}`);
+    if (!nutrients || nutrients.calories === 0) {
+      console.warn(`No nutrient data found for: ${foodName}`);
       return null;
     }
 
-    const detailData = await detailResponse.json();
-    const nutrients = extractNutrients(detailData);
-
     const result = {
       name: food.description,
-      fdcId,
+      fdcId: food.fdcId,
       calories: nutrients.calories,
       protein: nutrients.protein,
       fat: nutrients.fat,
@@ -77,8 +74,8 @@ export async function searchUSDAFood(foodName) {
 }
 
 /**
- * Extract nutrient values from USDA food details
- * Per 100g serving
+ * Extract nutrient values from USDA search result
+ * Per 100g serving (or per serving if not available)
  */
 function extractNutrients(foodData) {
   const nutrients = {
@@ -88,26 +85,41 @@ function extractNutrients(foodData) {
     carbs: 0,
   };
 
-  if (!foodData.foodNutrients) {
+  if (!foodData.foodNutrients || !Array.isArray(foodData.foodNutrients)) {
     return nutrients;
   }
 
   // Map USDA nutrient IDs to our fields
+  // These are the standard USDA nutrient IDs
   const nutrientMap = {
     1008: 'calories',     // Energy (kcal)
     1003: 'protein',      // Protein (g)
     1004: 'fat',          // Total lipid (fat) (g)
-    1005: 'carbs',        // Carbohydrate (g)
+    1005: 'carbs',        // Carbohydrate, by difference (g)
+    203: 'protein',       // Protein (g) - alternate ID
+    204: 'fat',           // Total lipid (fat) (g) - alternate ID
+    205: 'carbs',         // Carbohydrate, by difference (g) - alternate ID
   };
 
   for (const nutrient of foodData.foodNutrients) {
-    const nutrientId = nutrient.nutrient.id;
+    const nutrientId = nutrient.nutrient?.id || nutrient.nutrientId;
     const field = nutrientMap[nutrientId];
 
-    if (field && nutrient.value !== null) {
+    if (field && nutrient.value !== null && nutrient.value !== undefined) {
+      // Use amount or value depending on structure
+      const value = nutrient.amount || nutrient.value || 0;
       // Round to 1 decimal place
-      nutrients[field] = Math.round(nutrient.value * 10) / 10;
+      nutrients[field] = Math.max(0, Math.round(value * 10) / 10);
     }
+  }
+
+  // For calories, if not found, estimate from macros (4 cal/g protein & carbs, 9 cal/g fat)
+  if (nutrients.calories === 0 && (nutrients.protein || nutrients.fat || nutrients.carbs)) {
+    nutrients.calories = Math.round(
+      (nutrients.protein * 4) + 
+      (nutrients.fat * 9) + 
+      (nutrients.carbs * 4)
+    );
   }
 
   return nutrients;
