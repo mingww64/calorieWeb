@@ -8,27 +8,17 @@ function Analysis({ entries }) {
     const remaining = CALORIE_GOAL - total;
     const percentage = Math.round((total / CALORIE_GOAL) * 100);
     
-    // Calculate actual macros from entries
-    // If macros aren't available, estimate based on calorie distribution
+    // Calculate actual macros from entries (no estimation fallback)
     let protein = 0;
     let fat = 0;
     let carbs = 0;
-    let hasActualMacros = false;
 
     for (const entry of entries) {
       if (entry.protein !== null && entry.protein !== undefined) {
         protein += entry.protein;
         fat += (entry.fat || 0);
         carbs += (entry.carbs || 0);
-        hasActualMacros = true;
       }
-    }
-
-    // If we don't have actual macro data, estimate from calories
-    if (!hasActualMacros) {
-      protein = Math.round((total * 0.25) / 4); // 25% of calories / 4 cal/g
-      fat = Math.round((total * 0.35) / 9);     // 35% of calories / 9 cal/g
-      carbs = Math.round((total * 0.40) / 4);   // 40% of calories / 4 cal/g
     }
     
     return {
@@ -39,7 +29,7 @@ function Analysis({ entries }) {
       fat: Math.round(fat * 10) / 10,
       carbs: Math.round(carbs * 10) / 10,
       entryCount: entries.length,
-      hasActualMacros
+      hasActualMacros: protein > 0 || fat > 0 || carbs > 0
     };
   }, [entries]);
 
@@ -81,7 +71,7 @@ function Analysis({ entries }) {
 
         {/* Macro Breakdown */}
         <div className="stat-card macro-card">
-          <div className="stat-header">Macronutrients {stats.hasActualMacros ? '' : '(Est.)'}</div>
+          <div className="stat-header">Macronutrients</div>
           <div className="macro-row">
             <div className="macro-item">
               <span className="macro-label">Protein</span>
@@ -96,8 +86,12 @@ function Analysis({ entries }) {
               <span className="macro-value">{stats.carbs}g</span>
             </div>
           </div>
-          {!stats.hasActualMacros && <div className="macro-note">*Estimates based on calorie distribution</div>}
-          {stats.hasActualMacros && <div className="macro-note">*Based on USDA food data</div>}
+          {!stats.hasActualMacros && stats.entryCount > 0 && (
+            <div className="macro-note">*Add entries with USDA search or manual macro data for tracking</div>
+          )}
+          {stats.hasActualMacros && (
+            <div className="macro-note">*Based on entered nutrition data</div>
+          )}
         </div>
 
         {/* Quick Stats */}

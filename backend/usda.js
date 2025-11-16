@@ -11,65 +11,97 @@ const USDA_API_URL = 'https://api.nal.usda.gov/fdc/v1';
 const foodCache = new Map();
 
 /**
- * Search USDA FoodData Central for a food
- * Returns top result with nutrient data
+ * Search USDA FoodData Central for multiple foods
+ * Returns array of search results for user to choose from
  */
-export async function searchUSDAFood(foodName) {
-  // Check cache first
-  const cacheKey = foodName.toLowerCase();
-  if (foodCache.has(cacheKey)) {
-    return foodCache.get(cacheKey);
-  }
-
+export async function searchUSDAFoods(foodName, limit = 5) {
   if (!USDA_API_KEY) {
-    console.warn('USDA_API_KEY not set, using fallback estimates');
-    return null;
+    return { error: 'USDA_API_KEY not configured', suggestions: [] };
   }
 
   try {
-    // Search for the food with explicit nutrients parameter
     const searchUrl = new URL(`${USDA_API_URL}/foods/search`);
     searchUrl.searchParams.set('query', foodName);
-    searchUrl.searchParams.set('pageSize', '1');
+    searchUrl.searchParams.set('pageSize', limit.toString());
     searchUrl.searchParams.set('api_key', USDA_API_KEY);
 
     const searchResponse = await fetch(searchUrl.toString());
 
     if (!searchResponse.ok) {
       console.error(`USDA API search error: ${searchResponse.status}`);
-      return null;
+      return { error: `USDA API error: ${searchResponse.status}`, suggestions: [] };
     }
 
     const searchData = await searchResponse.json();
 
     if (!searchData.foods || searchData.foods.length === 0) {
-      console.warn(`No USDA food found for: ${foodName}`);
-      return null;
+      return { error: `No foods found for "${foodName}"`, suggestions: [] };
     }
 
-    const food = searchData.foods[0];
+    const suggestions = searchData.foods.map(food => ({
+      fdcId: food.fdcId,
+      name: food.description,
+      dataType: food.dataType,
+      brandOwner: food.brandOwner || null,
+    }));
+
+    return { error: null, suggestions };
+  } catch (error) {
+    console.error('USDA API error:', error.message);
+    return { error: `Search failed: ${error.message}`, suggestions: [] };
+  }
+}
+
+/**
+ * Get specific USDA food by FDC ID with full nutrient data
+ * Returns detailed nutrient data for selected food
+ */
+export async function getUSDAFoodById(fdcId) {
+  // Check cache first
+  const cacheKey = `fdc:${fdcId}`;
+  if (foodCache.has(cacheKey)) {
+    return foodCache.get(cacheKey);
+  }
+
+  if (!USDA_API_KEY) {
+    return { error: 'USDA_API_KEY not configured', nutrients: null };
+  }
+
+  try {
+    // Get detailed food data by FDC ID
+    const detailUrl = new URL(`${USDA_API_URL}/food/${fdcId}`);
+    detailUrl.searchParams.set('api_key', USDA_API_KEY);
+
+    const detailResponse = await fetch(detailUrl.toString());
+
+    if (!detailResponse.ok) {
+      console.error(`USDA API detail error: ${detailResponse.status}`);
+      return { error: `Food not found (ID: ${fdcId})`, nutrients: null };
+    }
+
+    const food = await detailResponse.json();
     const nutrients = extractNutrients(food);
 
     if (!nutrients || nutrients.calories === 0) {
-      console.warn(`No nutrient data found for: ${foodName}`);
-      return null;
+      return { error: 'No nutrient data available for this food', nutrients: null };
     }
 
     const result = {
-      name: food.description,
       fdcId: food.fdcId,
+      name: food.description,
       calories: nutrients.calories,
       protein: nutrients.protein,
       fat: nutrients.fat,
       carbs: nutrients.carbs,
+      dataType: food.dataType
     };
 
     // Cache the result
     foodCache.set(cacheKey, result);
-    return result;
+    return { error: null, nutrients: result };
   } catch (error) {
     console.error('USDA API error:', error.message);
-    return null;
+    return { error: `Failed to fetch food data: ${error.message}`, nutrients: null };
   }
 }
 
@@ -140,15 +172,4 @@ export function adjustNutrients(nutrient, quantity = 100) {
   };
 }
 
-/**
- * Estimate nutrients using simple ratios (fallback)
- * Used when USDA API is unavailable
- */
-export function estimateNutrients(calories) {
-  return {
-    calories,
-    protein: Math.round((calories * 0.25) / 4 * 10) / 10,    // 25% / 4 cal/g
-    fat: Math.round((calories * 0.35) / 9 * 10) / 10,        // 35% / 9 cal/g
-    carbs: Math.round((calories * 0.40) / 4 * 10) / 10,      // 40% / 4 cal/g
-  };
-}
+// No estimation functions - users must provide manual data or select from USDA results

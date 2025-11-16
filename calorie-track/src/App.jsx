@@ -104,12 +104,12 @@ function App() {
   };
 
   // Add or update entry
-  const handleSaveEntry = async (name, quantity, calories, editId = null) => {
+  const handleSaveEntry = async (name, quantity, calories, protein, fat, carbs, editId = null) => {
     try {
       if (editId) {
-        await updateEntry(editId, { name, quantity, calories, date: selectedDate });
+        await updateEntry(editId, { name, quantity, calories, protein, fat, carbs, date: selectedDate });
       } else {
-        await createEntry({ name, quantity, calories, date: selectedDate });
+        await createEntry({ name, quantity, calories, protein, fat, carbs, date: selectedDate });
       }
       await loadEntries(selectedDate);
       setEditingId(null);
