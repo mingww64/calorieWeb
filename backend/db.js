@@ -40,4 +40,23 @@ db.prepare(`
   CREATE INDEX IF NOT EXISTS idx_entries_userId_date ON entries(userId, date)
 `).run();
 
+// Create foods table to track foods and calories for autocomplete
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS foods (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    calories INTEGER NOT NULL,
+    usageCount INTEGER DEFAULT 1,
+    lastUsed TEXT NOT NULL,
+    FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(userId, name)
+  )
+`).run();
+
+// Create index for faster food lookups
+db.prepare(`
+  CREATE INDEX IF NOT EXISTS idx_foods_userId_name ON foods(userId, name)
+`).run();
+
 export default db;

@@ -51,7 +51,7 @@ export const createEntry = (entry) =>
 export const updateEntry = (id, entry) =>
   apiFetch(`/api/entries/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(entry),
+    body: JSON.stringify(entry),                         
   });
 
 /**
@@ -73,3 +73,26 @@ export const getSummary = (startDate, endDate) =>
  */
 export const getMe = () =>
   apiFetch('/api/me');
+
+/**
+ * Register a new user in local DB (usually called after Firebase sign-up)
+ * Body: { displayName? }
+ */
+export const registerUser = (displayName) =>
+  apiFetch('/api/users', {
+    method: 'POST',
+    body: JSON.stringify({ displayName: displayName || '' }),
+  });
+
+/**
+ * Get food autocomplete suggestions
+ * Query params: ?q=search_term&limit=5
+ */
+export const getFoodSuggestions = (query, limit = 5) =>
+  apiFetch(`/api/foods/autocomplete?q=${encodeURIComponent(query)}&limit=${limit}`);
+
+/**
+ * Get all foods for the current user (for bulk loading)
+ */
+export const getFoods = () =>
+  apiFetch('/api/foods');
