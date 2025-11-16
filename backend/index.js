@@ -140,6 +140,18 @@ app.post('/api/entries', verifyIdToken, (req, res, next) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(req.user.uid, name, quantity || '', Number(calories), entryDate, now, now);
 
+    // Track this food for autocomplete (insert or update usage count)
+    try {
+      db.prepare(`
+        INSERT INTO foods (userId, name, calories, usageCount, lastUsed)
+        VALUES (?, ?, ?, 1, ?)
+        ON CONFLICT(userId, name) DO UPDATE SET usageCount = usageCount + 1, lastUsed = ?
+      `).run(req.user.uid, name, Number(calories), now, now);
+    } catch (foodErr) {
+      console.warn('Failed to track food:', foodErr.message);
+      // don't fail the entry creation if food tracking fails
+    }
+
     const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(info.lastInsertRowid);
     res.status(201).json(entry);
   } catch (error) {
@@ -194,6 +206,85 @@ app.delete('/api/entries/:id', verifyIdToken, (req, res, next) => {
     res.status(204).end();
   } catch (error) {
     next(error);
+  }
+});
+
+/**
+ * POST /api/users
+ * Register a user in the local DB (called after Firebase sign-up)
+ * Body: { displayName? }
+ */
+app.post('/api/users', verifyIdToken, (req, res, next) => {
+  try {
+    const { displayName } = req.body;
+    const now = new Date().toISOString();
+
+    // User row is auto-created by middleware, but allow explicit updates
+    db.prepare(`
+      UPDATE users SET displayName = ?, updatedAt = ? WHERE id = ?
+    `).run(displayName || '', now, req.user.uid);
+
+    const user = db.prepare('SELECT id, email, displayName, createdAt, updatedAt FROM users WHERE id = ?').get(req.user.uid);
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/foods/autocomplete?q=search&limit=5
+ * Get food name and calorie suggestions based on user's history
+ */
+app.get('/api/foods/autocomplete', verifyIdToken, (req, res) => {
+  try {
+    const q = (req.query.q || '').toLowerCase();
+    const limit = Math.min(Number(req.query.limit) || 5, 20);
+
+    let foods = [];
+    if (q.length > 0) {
+      // Search by name, sorted by usage and recency
+      foods = db.prepare(`
+        SELECT DISTINCT name, calories
+        FROM foods
+        WHERE userId = ? AND LOWER(name) LIKE ?
+        ORDER BY usageCount DESC, lastUsed DESC
+        LIMIT ?
+      `).all(req.user.uid, `%${q}%`, limit);
+    } else {
+      // Return top foods for the user if no query
+      foods = db.prepare(`
+        SELECT DISTINCT name, calories
+        FROM foods
+        WHERE userId = ?
+        ORDER BY usageCount DESC, lastUsed DESC
+        LIMIT ?
+      `).all(req.user.uid, limit);
+    }
+
+    res.json(foods);
+  } catch (error) {
+    console.error('Food autocomplete error:', error);
+    res.json([]);
+  }
+});
+
+/**
+ * GET /api/foods
+ * Get all foods for the current user
+ */
+app.get('/api/foods', verifyIdToken, (req, res) => {
+  try {
+    const foods = db.prepare(`
+      SELECT DISTINCT name, calories
+      FROM foods
+      WHERE userId = ?
+      ORDER BY usageCount DESC, lastUsed DESC
+    `).all(req.user.uid);
+
+    res.json(foods);
+  } catch (error) {
+    console.error('Get foods error:', error);
+    res.json([]);
   }
 });
 
