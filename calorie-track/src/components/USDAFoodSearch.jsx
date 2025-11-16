@@ -122,6 +122,9 @@ function USDAFoodSearch({ onFoodSelect, onCancel, initialQuery = '' }) {
                         {food.brandOwner && (
                           <span className="brand-owner"> • {food.brandOwner}</span>
                         )}
+                        {!food.hasDetailedNutrients && (
+                          <span className="nutrition-warning"> • Limited data</span>
+                        )}
                       </div>
                     </div>
                   ))}

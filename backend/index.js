@@ -18,7 +18,14 @@ app.use(express.json());
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    hasUSDAKey: !!process.env.USDA_API_KEY,
+    hasFirebaseKey: !!process.env.FIREBASE_PRIVATE_KEY,
+    port: process.env.PORT || 4000
+  });
 });
 
 // ============================================
