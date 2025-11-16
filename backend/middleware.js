@@ -1,4 +1,5 @@
 import { auth } from './firebase.js';
+import db from './db.js';
 
 /**
  * Middleware to verify Firebase ID token
@@ -14,6 +15,25 @@ export const verifyIdToken = async (req, res, next) => {
   try {
     const decodedToken = await auth.verifyIdToken(token);
     req.user = { uid: decodedToken.uid, email: decodedToken.email };
+
+    // Ensure a corresponding users row exists in the local DB so
+    // inserts into `entries` with a foreign key to users.id won't fail. Ignore if exists.
+    try {
+      const now = new Date().toISOString();
+      db.prepare(`
+        INSERT OR IGNORE INTO users (id, email, displayName, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(decodedToken.uid, decodedToken.email || '', decodedToken.name || '', now, now);
+
+      // Update profile fields if they have changed
+      db.prepare(`
+        UPDATE users SET email = ?, displayName = ?, updatedAt = ? WHERE id = ?
+      `).run(decodedToken.email || '', decodedToken.name || '', now, decodedToken.uid);
+    } catch (dbErr) {
+      console.error('Failed to upsert user row for authenticated user:', dbErr);
+      // don't block authentication; let requests proceed — entries inserts may still fail
+    }
+
     next();
   } catch (error) {
     console.error('Token verification failed:', error.message);
