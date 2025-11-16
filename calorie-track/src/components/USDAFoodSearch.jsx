@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { searchUSDAFoods, getUSDAFood } from '../api';
+import './USDAFoodSearch.css';
 
 function USDAFoodSearch({ onFoodSelect, onCancel, initialQuery = '' }) {
   const [query, setQuery] = useState(initialQuery);
