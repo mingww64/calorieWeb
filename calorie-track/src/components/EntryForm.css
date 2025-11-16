@@ -80,6 +80,25 @@
   cursor: not-allowed;
 }
 
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.9rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
+  accent-color: #646cff;
+}
+
+.checkbox-label span {
+  color: inherit;
+}
+
 /* Food Suggestions Dropdown */
 .food-suggestions-dropdown {
   position: absolute;
@@ -114,11 +133,27 @@
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+.usda-header-with-filter {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 1rem;
   flex-wrap: wrap;
-  gap: 0.5rem;
+}
+
+.usda-header-title {
+  text-align: center;
+  width: 100%;
+}
+
+.data-type-checkboxes-inline {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  font-weight: normal;
 }
 
 .usda-note {
