@@ -847,6 +847,12 @@
   font-style: italic;
 }
 
+.nutrition-warning {
+  color: #ff6b35;
+  font-style: italic;
+  font-size: 0.85em;
+}
+
 .search-actions {
   display: flex;
   gap: 1rem;
