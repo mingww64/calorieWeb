@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getFoodSuggestions } from '../api';
 
 function EditEntryForm({ entry, onSave, onCancel }) {
+  console.log('EditEntryForm entry data:', entry); // Debug log
+  
   const [name, setName] = useState(entry.name);
   const [quantity, setQuantity] = useState(entry.quantity);
   const [calories, setCalories] = useState(entry.calories);
