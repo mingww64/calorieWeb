@@ -5,8 +5,20 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  updateProfile,
 } from 'firebase/auth';
-import { getEntries, createEntry, updateEntry, deleteEntry } from './api';
+import {
+  getEntries,
+  createEntry,
+  updateEntry,
+  deleteEntry,
+  registerUser,
+} from './api';
+import AuthForm from './components/AuthForm';
+import EntryForm from './components/EntryForm';
+import EditEntryForm from './components/EditEntryForm';
+import EntryList from './components/EntryList';
+import UserHeader from './components/UserHeader';
 import './App.css';
 
 function App() {
@@ -14,6 +26,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState([]);
   const [showAuth, setShowAuth] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   // Auth state listener
   useEffect(() => {
@@ -24,6 +37,12 @@ function App() {
       if (currentUser) {
         // Load today's entries
         await loadEntries();
+        // Optional: register user in local DB
+        try {
+          await registerUser(currentUser.displayName);
+        } catch (err) {
+          console.warn('User already registered or error:', err);
+        }
       }
     });
 
@@ -38,14 +57,18 @@ function App() {
       setEntries(data);
     } catch (error) {
       console.error('Failed to load entries:', error);
+      alert('Failed to load entries: ' + error.message);
     }
   };
 
   // Sign up
   const handleSignUp = async (email, password, displayName) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // Optionally update profile with displayName
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Update user profile with displayName
+      if (displayName) {
+        await updateProfile(userCredential.user, { displayName });
+      }
       setShowAuth(false);
     } catch (error) {
       alert('Sign up failed: ' + error.message);
@@ -67,24 +90,31 @@ function App() {
     await signOut(auth);
   };
 
-  // Add entry
-  const handleAddEntry = async (name, quantity, calories) => {
+  // Add or update entry
+  const handleSaveEntry = async (name, quantity, calories, editId = null) => {
     try {
       const today = new Date().toISOString().slice(0, 10);
-      await createEntry({ name, quantity, calories, date: today });
+      if (editId) {
+        await updateEntry(editId, { name, quantity, calories, date: today });
+      } else {
+        await createEntry({ name, quantity, calories, date: today });
+      }
       await loadEntries();
+      setEditingId(null);
     } catch (error) {
-      alert('Failed to add entry: ' + error.message);
+      alert('Failed to save entry: ' + error.message);
     }
   };
 
   // Delete entry
   const handleDeleteEntry = async (id) => {
-    try {
-      await deleteEntry(id);
-      await loadEntries();
-    } catch (error) {
-      alert('Failed to delete entry: ' + error.message);
+    if (window.confirm('Delete this entry?')) {
+      try {
+        await deleteEntry(id);
+        await loadEntries();
+      } catch (error) {
+        alert('Failed to delete entry: ' + error.message);
+      }
     }
   };
 
@@ -106,126 +136,24 @@ function App() {
   return (
     <div className="app">
       <h1>Calorie Track</h1>
-      <div className="user-info">
-        <p>Welcome, {user.email}</p>
-        <button onClick={handleSignOut}>Sign Out</button>
-      </div>
+      <UserHeader user={user} onSignOut={handleSignOut} />
 
-      <EntryForm onAdd={handleAddEntry} />
-
-      <div className="entries">
-        <h2>Today's Entries</h2>
-        {entries.length === 0 ? (
-          <p>No entries yet</p>
-        ) : (
-          <ul>
-            {entries.map((entry) => (
-              <li key={entry.id}>
-                <strong>{entry.name}</strong> ({entry.quantity}) - {entry.calories} cal
-                <button onClick={() => handleDeleteEntry(entry.id)}>Delete</button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="total">
-          Total: {entries.reduce((sum, e) => sum + e.calories, 0)} calories
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Auth Form Component
-function AuthForm({ onSignUp, onSignIn }) {
-  const [mode, setMode] = useState('signin'); // 'signin' or 'signup'
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (mode === 'signin') {
-      onSignIn(email, password);
-    } else {
-      onSignUp(email, password, displayName);
-    }
-  };
-
-  return (
-    <div className="auth-form">
-      <h2>{mode === 'signin' ? 'Sign In' : 'Sign Up'}</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+      {editingId ? (
+        <EditEntryForm
+          entry={entries.find((e) => e.id === editingId)}
+          onSave={handleSaveEntry}
+          onCancel={() => setEditingId(null)}
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        {mode === 'signup' && (
-          <input
-            type="text"
-            placeholder="Display Name (optional)"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-          />
-        )}
-        <button type="submit">{mode === 'signin' ? 'Sign In' : 'Sign Up'}</button>
-      </form>
-      <button onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}>
-        {mode === 'signin' ? 'Need an account?' : 'Already have an account?'}
-      </button>
+      ) : (
+        <EntryForm onAdd={handleSaveEntry} />
+      )}
+
+      <EntryList
+        entries={entries}
+        onEdit={setEditingId}
+        onDelete={handleDeleteEntry}
+      />
     </div>
-  );
-}
-
-// Entry Form Component
-function EntryForm({ onAdd }) {
-  const [name, setName] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [calories, setCalories] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (name && calories) {
-      onAdd(name, quantity || '1', parseInt(calories));
-      setName('');
-      setQuantity('');
-      setCalories('');
-    }
-  };
-
-  return (
-    <form className="entry-form" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Food name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Quantity"
-        value={quantity}
-        onChange={(e) => setQuantity(e.target.value)}
-      />
-      <input
-        type="number"
-        placeholder="Calories"
-        value={calories}
-        onChange={(e) => setCalories(e.target.value)}
-        required
-      />
-      <button type="submit">Add Entry</button>
-    </form>
   );
 }
 
