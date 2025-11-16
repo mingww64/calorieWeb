@@ -96,3 +96,10 @@ export const getFoodSuggestions = (query, limit = 5) =>
  */
 export const getFoods = () =>
   apiFetch('/api/foods');
+
+/**
+ * Search USDA FoodData Central for a food
+ * Returns: { name, calories, protein, fat, carbs, fdcId }
+ */
+export const searchUSDAFood = (query) =>
+  apiFetch(`/api/foods/search/usda?q=${encodeURIComponent(query)}`);

@@ -4,6 +4,7 @@ import 'dotenv/config';
 import db from './db.js';
 import { auth } from './firebase.js';
 import { verifyIdToken, errorHandler } from './middleware.js';
+import { searchUSDAFood, adjustNutrients, estimateNutrients } from './usda.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -122,11 +123,11 @@ app.get('/api/summary', verifyIdToken, (req, res) => {
 /**
  * POST /api/entries
  * Create a new entry
- * Body: { name, quantity, calories, date? }
+ * Body: { name, quantity, calories, protein?, fat?, carbs?, date? }
  */
-app.post('/api/entries', verifyIdToken, (req, res, next) => {
+app.post('/api/entries', verifyIdToken, async (req, res, next) => {
   try {
-    const { name, quantity, calories, date } = req.body;
+    const { name, quantity, calories, protein, fat, carbs, date } = req.body;
 
     if (!name || calories == null) {
       return res.status(400).json({ error: 'name and calories required' });
@@ -134,22 +135,65 @@ app.post('/api/entries', verifyIdToken, (req, res, next) => {
 
     const now = new Date().toISOString();
     const entryDate = date || now.slice(0, 10);
+    
+    // If nutrients not provided, try to get from USDA API
+    let finalProtein = protein;
+    let finalFat = fat;
+    let finalCarbs = carbs;
+
+    if (!protein || !fat || !carbs) {
+      try {
+        const usdaFood = await searchUSDAFood(name);
+        if (usdaFood) {
+          const qty = parseInt(quantity) || 100;
+          const adjusted = adjustNutrients(usdaFood, qty);
+          finalProtein = finalProtein ?? adjusted.protein;
+          finalFat = finalFat ?? adjusted.fat;
+          finalCarbs = finalCarbs ?? adjusted.carbs;
+        } else {
+          // Fallback to estimates
+          const estimated = estimateNutrients(calories);
+          finalProtein = finalProtein ?? estimated.protein;
+          finalFat = finalFat ?? estimated.fat;
+          finalCarbs = finalCarbs ?? estimated.carbs;
+        }
+      } catch (err) {
+        console.warn('Failed to fetch USDA nutrients:', err.message);
+        // Use estimates as fallback
+        const estimated = estimateNutrients(calories);
+        finalProtein = finalProtein ?? estimated.protein;
+        finalFat = finalFat ?? estimated.fat;
+        finalCarbs = finalCarbs ?? estimated.carbs;
+      }
+    }
 
     const info = db.prepare(`
       INSERT INTO entries (userId, name, quantity, calories, date, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(req.user.uid, name, quantity || '', Number(calories), entryDate, now, now);
 
-    // Track this food for autocomplete (insert or update usage count)
+    // Track this food for autocomplete with nutrients
     try {
       db.prepare(`
-        INSERT INTO foods (userId, name, calories, usageCount, lastUsed)
-        VALUES (?, ?, ?, 1, ?)
-        ON CONFLICT(userId, name) DO UPDATE SET usageCount = usageCount + 1, lastUsed = ?
-      `).run(req.user.uid, name, Number(calories), now, now);
+        INSERT INTO foods (userId, name, calories, protein, fat, carbs, usageCount, lastUsed, createdAt)
+        VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+        ON CONFLICT(userId, name) DO UPDATE SET usageCount = usageCount + 1, lastUsed = ?, protein = ?, fat = ?, carbs = ?
+      `).run(
+        req.user.uid, 
+        name, 
+        Number(calories), 
+        finalProtein, 
+        finalFat, 
+        finalCarbs, 
+        now, 
+        now,
+        now,
+        finalProtein,
+        finalFat,
+        finalCarbs
+      );
     } catch (foodErr) {
       console.warn('Failed to track food:', foodErr.message);
-      // don't fail the entry creation if food tracking fails
     }
 
     const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(info.lastInsertRowid);
@@ -233,7 +277,7 @@ app.post('/api/users', verifyIdToken, (req, res, next) => {
 
 /**
  * GET /api/foods/autocomplete?q=search&limit=5
- * Get food name and calorie suggestions based on user's history
+ * Get food name, calorie, and macro suggestions based on user's history
  */
 app.get('/api/foods/autocomplete', verifyIdToken, (req, res) => {
   try {
@@ -244,18 +288,20 @@ app.get('/api/foods/autocomplete', verifyIdToken, (req, res) => {
     if (q.length > 0) {
       // Search by name, sorted by usage and recency
       foods = db.prepare(`
-        SELECT DISTINCT name, calories
+        SELECT name, calories, protein, fat, carbs
         FROM foods
         WHERE userId = ? AND LOWER(name) LIKE ?
+        GROUP BY name
         ORDER BY usageCount DESC, lastUsed DESC
         LIMIT ?
       `).all(req.user.uid, `%${q}%`, limit);
     } else {
       // Return top foods for the user if no query
       foods = db.prepare(`
-        SELECT DISTINCT name, calories
+        SELECT name, calories, protein, fat, carbs
         FROM foods
         WHERE userId = ?
+        GROUP BY name
         ORDER BY usageCount DESC, lastUsed DESC
         LIMIT ?
       `).all(req.user.uid, limit);
@@ -285,6 +331,32 @@ app.get('/api/foods', verifyIdToken, (req, res) => {
   } catch (error) {
     console.error('Get foods error:', error);
     res.json([]);
+  }
+});
+
+/**
+ * GET /api/foods/search/usda?q=query
+ * Search USDA FoodData Central for a specific food
+ * Returns: { name, calories, protein, fat, carbs, fdcId }
+ */
+app.get('/api/foods/search/usda', verifyIdToken, async (req, res) => {
+  try {
+    const q = req.query.q || '';
+    
+    if (!q || q.length < 2) {
+      return res.status(400).json({ error: 'Query must be at least 2 characters' });
+    }
+
+    const food = await searchUSDAFood(q);
+    
+    if (food) {
+      res.json(food);
+    } else {
+      res.status(404).json({ error: 'Food not found in USDA database' });
+    }
+  } catch (error) {
+    console.error('USDA search error:', error);
+    res.status(500).json({ error: 'Failed to search USDA database' });
   }
 });
 

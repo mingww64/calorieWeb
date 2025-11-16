@@ -19,6 +19,9 @@ import EntryForm from './components/EntryForm';
 import EditEntryForm from './components/EditEntryForm';
 import EntryList from './components/EntryList';
 import UserHeader from './components/UserHeader';
+import UserSettings from './components/UserSettings';
+import DateSelector from './components/DateSelector';
+import Analysis from './components/Analysis';
 import './App.css';
 
 function App() {
@@ -27,6 +30,10 @@ function App() {
   const [entries, setEntries] = useState([]);
   const [showAuth, setShowAuth] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    return new Date().toISOString().slice(0, 10);
+  });
 
   // Auth state listener
   useEffect(() => {
@@ -36,7 +43,7 @@ function App() {
 
       if (currentUser) {
         // Load today's entries
-        await loadEntries();
+        await loadEntries(selectedDate);
         // Optional: register user in local DB
         try {
           await registerUser(currentUser.displayName);
@@ -49,11 +56,17 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Load entries for today
-  const loadEntries = async () => {
+  // Load entries when date changes
+  useEffect(() => {
+    if (user) {
+      loadEntries(selectedDate);
+    }
+  }, [selectedDate, user]);
+
+  // Load entries for selected date
+  const loadEntries = async (date) => {
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const data = await getEntries(today);
+      const data = await getEntries(date);
       setEntries(data);
     } catch (error) {
       console.error('Failed to load entries:', error);
@@ -93,13 +106,12 @@ function App() {
   // Add or update entry
   const handleSaveEntry = async (name, quantity, calories, editId = null) => {
     try {
-      const today = new Date().toISOString().slice(0, 10);
       if (editId) {
-        await updateEntry(editId, { name, quantity, calories, date: today });
+        await updateEntry(editId, { name, quantity, calories, date: selectedDate });
       } else {
-        await createEntry({ name, quantity, calories, date: today });
+        await createEntry({ name, quantity, calories, date: selectedDate });
       }
-      await loadEntries();
+      await loadEntries(selectedDate);
       setEditingId(null);
     } catch (error) {
       alert('Failed to save entry: ' + error.message);
@@ -111,7 +123,7 @@ function App() {
     if (window.confirm('Delete this entry?')) {
       try {
         await deleteEntry(id);
-        await loadEntries();
+        await loadEntries(selectedDate);
       } catch (error) {
         alert('Failed to delete entry: ' + error.message);
       }
@@ -136,7 +148,13 @@ function App() {
   return (
     <div className="app">
       <h1>Calorie Track</h1>
-      <UserHeader user={user} onSignOut={handleSignOut} />
+      <UserHeader user={user} onSignOut={handleSignOut} onSettings={() => setShowSettings(true)} />
+
+      {showSettings && <UserSettings user={user} onClose={() => setShowSettings(false)} />}
+
+      <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
+
+      <Analysis entries={entries} />
 
       {editingId ? (
         <EditEntryForm
