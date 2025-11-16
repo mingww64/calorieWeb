@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getFoodSuggestions } from '../api';
+import './EditEntryForm.css';
 
 function EditEntryForm({ entry, onSave, onCancel }) {
   console.log('EditEntryForm entry data:', entry); // Debug log
