@@ -64,6 +64,11 @@ function EntryForm({ onAdd }) {
       return;
     }
     
+    // Don't search if in manual entry mode
+    if (showManualEntry) {
+      return;
+    }
+    
     if (name.length > 1) {
       const fetchSuggestions = async () => {
         try {
@@ -91,7 +96,7 @@ function EntryForm({ onAdd }) {
       setUsdaSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [name, selectedFood]);
+  }, [name, selectedFood, showManualEntry]);
 
   // Handle selecting a local food suggestion
   const handleSuggestionSelect = (suggestion) => {
@@ -151,6 +156,9 @@ function EntryForm({ onAdd }) {
   // Show manual entry form
   const handleManualEntry = () => {
     setShowSuggestions(false);
+    setSuggestions([]);
+    setUsdaSuggestions([]);
+    setSearchingUSDA(false);
     setShowManualEntry(true);
     setSelectedFood({ type: 'manual' });
   };
@@ -374,7 +382,14 @@ function EntryForm({ onAdd }) {
                 type="number"
                 id="calories"
                 value={calories}
-                onChange={(e) => setCalories(e.target.value)}
+                onChange={(e) => {
+                  setCalories(e.target.value);
+                  // Switch to manual if user edits USDA value
+                  if (selectedFood?.type === 'usda') {
+                    setSelectedFood({ type: 'manual' });
+                    setShowManualEntry(true);
+                  }
+                }}
                 placeholder="0"
                 required
               />
@@ -386,7 +401,14 @@ function EntryForm({ onAdd }) {
                 type="number"
                 id="protein"
                 value={protein}
-                onChange={(e) => setProtein(e.target.value)}
+                onChange={(e) => {
+                  setProtein(e.target.value);
+                  // Switch to manual if user edits USDA value
+                  if (selectedFood?.type === 'usda') {
+                    setSelectedFood({ type: 'manual' });
+                    setShowManualEntry(true);
+                  }
+                }}
                 placeholder="0"
                 step="0.1"
                 required
@@ -399,7 +421,14 @@ function EntryForm({ onAdd }) {
                 type="number"
                 id="fat"
                 value={fat}
-                onChange={(e) => setFat(e.target.value)}
+                onChange={(e) => {
+                  setFat(e.target.value);
+                  // Switch to manual if user edits USDA value
+                  if (selectedFood?.type === 'usda') {
+                    setSelectedFood({ type: 'manual' });
+                    setShowManualEntry(true);
+                  }
+                }}
                 placeholder="0"
                 step="0.1"
                 required
@@ -412,7 +441,14 @@ function EntryForm({ onAdd }) {
                 type="number"
                 id="carbs"
                 value={carbs}
-                onChange={(e) => setCarbs(e.target.value)}
+                onChange={(e) => {
+                  setCarbs(e.target.value);
+                  // Switch to manual if user edits USDA value
+                  if (selectedFood?.type === 'usda') {
+                    setSelectedFood({ type: 'manual' });
+                    setShowManualEntry(true);
+                  }
+                }}
                 placeholder="0"
                 step="0.1"
                 required
