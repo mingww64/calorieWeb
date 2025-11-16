@@ -15,6 +15,7 @@ function EntryForm({ onAdd }) {
   const [selectedFood, setSelectedFood] = useState(null); // Selected food with source info
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [searchingUSDA, setSearchingUSDA] = useState(false);
+  const [usdaDataTypes, setUsdaDataTypes] = useState(['Foundation', 'SR Legacy']); // Default data types
 
   // Calculate adjusted nutrition values based on quantity (only for weight units)
   const getAdjustedNutrition = (baseNutrition, inputQuantity) => {
@@ -76,9 +77,9 @@ function EntryForm({ onAdd }) {
           const localResults = await getFoodSuggestions(name, 3);
           setSuggestions(localResults);
 
-          // Search USDA database
+          // Search USDA database with selected data types
           setSearchingUSDA(true);
-          const usdaResults = await searchUSDAFoods(name, 7);
+          const usdaResults = await searchUSDAFoods(name, 7, usdaDataTypes);
           setUsdaSuggestions(usdaResults.suggestions || []);
           setSearchingUSDA(false);
           
@@ -96,7 +97,7 @@ function EntryForm({ onAdd }) {
       setUsdaSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [name, selectedFood, showManualEntry]);
+  }, [name, selectedFood, showManualEntry, usdaDataTypes]);
 
   // Handle selecting a local food suggestion
   const handleSuggestionSelect = (suggestion) => {
@@ -274,8 +275,68 @@ function EntryForm({ onAdd }) {
             {/* USDA suggestions */}
             {usdaSuggestions.length > 0 && (
               <div className="suggestion-section">
-                <div className="suggestion-header">
-                  USDA Database {searchingUSDA && <span className="loading">Searching...</span>}
+                <div className="suggestion-header usda-header-with-filter">
+                  <div className="usda-header-title">
+                    USDA Database {searchingUSDA && <span className="loading">Searching...</span>}
+                  </div>
+                  <div className="data-type-checkboxes-inline">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={usdaDataTypes.includes('Foundation')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setUsdaDataTypes([...usdaDataTypes, 'Foundation']);
+                          } else {
+                            setUsdaDataTypes(usdaDataTypes.filter(t => t !== 'Foundation'));
+                          }
+                        }}
+                      />
+                      <span>Foundation</span>
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={usdaDataTypes.includes('SR Legacy')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setUsdaDataTypes([...usdaDataTypes, 'SR Legacy']);
+                          } else {
+                            setUsdaDataTypes(usdaDataTypes.filter(t => t !== 'SR Legacy'));
+                          }
+                        }}
+                      />
+                      <span>SR Legacy</span>
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={usdaDataTypes.includes('Branded')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setUsdaDataTypes([...usdaDataTypes, 'Branded']);
+                          } else {
+                            setUsdaDataTypes(usdaDataTypes.filter(t => t !== 'Branded'));
+                          }
+                        }}
+                      />
+                      <span>Branded</span>
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={usdaDataTypes.includes('Survey (FNDDS)')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setUsdaDataTypes([...usdaDataTypes, 'Survey (FNDDS)']);
+                          } else {
+                            setUsdaDataTypes(usdaDataTypes.filter(t => t !== 'Survey (FNDDS)'));
+                          }
+                        }}
+                      />
+                      <span>Survey</span>
+                    </label>
+                  </div>
                   <span className="usda-note">• Nutrition values per 100g</span>
                 </div>
                 {usdaSuggestions.map((food) => (

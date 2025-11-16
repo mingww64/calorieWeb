@@ -369,19 +369,30 @@ app.get('/api/foods', verifyIdToken, (req, res) => {
 });
 
 /**
- * GET /api/foods/search/usda?q=query
+ * GET /api/foods/search/usda?q=query&dataTypes=Foundation,Branded
  * Search USDA FoodData Central for foods
+ * Query params:
+ *   - q: search query (required, min 2 chars)
+ *   - dataTypes: comma-separated list of data types (optional)
+ *     Available: Foundation, SR Legacy, Branded, Survey (FNDDS)
  * Returns: { error?, suggestions: [{ fdcId, name, dataType, brandOwner }] }
  */
 app.get('/api/foods/search/usda', verifyIdToken, async (req, res) => {
   try {
     const q = req.query.q || '';
+    const dataTypesParam = req.query.dataTypes || '';
     
     if (!q || q.length < 2) {
       return res.status(400).json({ error: 'Query must be at least 2 characters' });
     }
 
-    const result = await searchUSDAFoods(q, 10);
+    // Parse dataTypes from comma-separated string
+    let dataTypes = ['Foundation', 'SR Legacy']; // Default
+    if (dataTypesParam) {
+      dataTypes = dataTypesParam.split(',').map(t => t.trim()).filter(Boolean);
+    }
+
+    const result = await searchUSDAFoods(q, 10, dataTypes);
     res.json(result);
   } catch (error) {
     console.error('USDA search error:', error);

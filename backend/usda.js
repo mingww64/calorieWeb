@@ -10,8 +10,11 @@ const USDA_API_URL = 'https://api.nal.usda.gov/fdc/v1';
 /**
  * Search USDA FoodData Central for multiple foods
  * Returns array of search results with embedded nutrition data
+ * @param {string} foodName - Search query
+ * @param {number} limit - Max results to return
+ * @param {string[]} dataTypes - Array of data types to include (e.g., ['Foundation', 'SR Legacy', 'Branded'])
  */
-export async function searchUSDAFoods(foodName, limit = 5) {
+export async function searchUSDAFoods(foodName, limit = 5, dataTypes = ['Foundation', 'SR Legacy']) {
   if (!USDA_API_KEY) {
     return { error: 'USDA_API_KEY not configured', suggestions: [] };
   }
@@ -21,7 +24,11 @@ export async function searchUSDAFoods(foodName, limit = 5) {
     searchUrl.searchParams.set('query', foodName);
     searchUrl.searchParams.set('pageSize', limit.toString());
     searchUrl.searchParams.set('api_key', USDA_API_KEY);
-    searchUrl.searchParams.set('dataType', 'Foundation,SR Legacy'); // Focus on foods with good nutrient data
+    
+    // Set dataType filter based on user selection
+    if (dataTypes && dataTypes.length > 0) {
+      searchUrl.searchParams.set('dataType', dataTypes.join(','));
+    }
 
     const searchResponse = await fetch(searchUrl.toString());
 
