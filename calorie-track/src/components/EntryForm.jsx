@@ -65,7 +65,14 @@ function EntryForm({ onAdd }) {
                   className="suggestion-item"
                   onClick={() => handleSelectSuggestion(sugg)}
                 >
-                  <strong>{sugg.name}</strong> - {sugg.calories} cal
+                  <div className="suggestion-main">
+                    <strong>{sugg.name}</strong> - {sugg.calories} cal
+                  </div>
+                  {sugg.protein && (
+                    <div className="suggestion-macros">
+                      P: {sugg.protein}g | F: {sugg.fat}g | C: {sugg.carbs}g
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

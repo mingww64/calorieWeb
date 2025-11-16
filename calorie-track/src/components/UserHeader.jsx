@@ -1,6 +1,6 @@
 import React from 'react';
 
-function UserHeader({ user, onSignOut }) {
+function UserHeader({ user, onSignOut, onSettings }) {
   const displayName = user.displayName || user.email;
   const [gravatarUrl, setGravatarUrl] = React.useState('');
 
@@ -47,7 +47,10 @@ function UserHeader({ user, onSignOut }) {
         )}
         <p>Welcome, {displayName}</p>
       </div>
-      <button onClick={onSignOut}>Sign Out</button>
+      <div className="user-actions">
+        <button onClick={onSettings} className="settings-btn">⚙️ Settings</button>
+        <button onClick={onSignOut}>Sign Out</button>
+      </div>
     </div>
   );
 }
