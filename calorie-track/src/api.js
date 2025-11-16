@@ -27,7 +27,20 @@ export const apiFetch = async (endpoint, options = {}) => {
     throw new Error(errorData.error || `API error: ${response.status}`);
   }
 
-  return response.json();
+  // Handle empty responses (like 204 No Content)
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return null;
+  }
+
+  // Try to parse as JSON, but handle cases where response body is empty
+  try {
+    return await response.json();
+  } catch (error) {
+    // If JSON parsing fails and we got here, it means the response was successful
+    // but had no body or invalid JSON. For successful requests, this is usually fine.
+    console.warn('Response body could not be parsed as JSON:', error.message);
+    return null;
+  }
 };
 
 /**
