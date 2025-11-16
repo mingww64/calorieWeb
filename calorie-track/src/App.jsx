@@ -22,6 +22,7 @@ import UserHeader from './components/UserHeader';
 import UserSettings from './components/UserSettings';
 import DateSelector from './components/DateSelector';
 import Analysis from './components/Analysis';
+import HistoricalTrends from './components/HistoricalTrends';
 import './App.css';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showTrends, setShowTrends] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
     return new Date().toISOString().slice(0, 10);
   });
@@ -148,29 +150,40 @@ function App() {
   return (
     <div className="app">
       <h1>Calorie Track</h1>
-      <UserHeader user={user} onSignOut={handleSignOut} onSettings={() => setShowSettings(true)} />
+      <UserHeader 
+        user={user} 
+        onSignOut={handleSignOut} 
+        onSettings={() => setShowSettings(true)} 
+        onTrends={() => setShowTrends(!showTrends)}
+      />
 
       {showSettings && <UserSettings user={user} onClose={() => setShowSettings(false)} />}
 
-      <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
-
-      <Analysis entries={entries} />
-
-      {editingId ? (
-        <EditEntryForm
-          entry={entries.find((e) => e.id === editingId)}
-          onSave={handleSaveEntry}
-          onCancel={() => setEditingId(null)}
-        />
+      {showTrends ? (
+        <HistoricalTrends user={user} />
       ) : (
-        <EntryForm onAdd={handleSaveEntry} />
-      )}
+        <>
+          <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
-      <EntryList
-        entries={entries}
-        onEdit={setEditingId}
-        onDelete={handleDeleteEntry}
-      />
+          <Analysis entries={entries} />
+
+          {editingId ? (
+            <EditEntryForm
+              entry={entries.find((e) => e.id === editingId)}
+              onSave={handleSaveEntry}
+              onCancel={() => setEditingId(null)}
+            />
+          ) : (
+            <EntryForm onAdd={handleSaveEntry} />
+          )}
+
+          <EntryList
+            entries={entries}
+            onEdit={setEditingId}
+            onDelete={handleDeleteEntry}
+          />
+        </>
+      )}
     </div>
   );
 }
