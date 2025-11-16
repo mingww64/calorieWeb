@@ -80,47 +80,72 @@ function extractNutrients(foodData) {
     return nutrients;
   }
 
-  // Map USDA nutrient IDs to our fields
+  // Map USDA nutrient numbers to our fields (based on actual API structure)
   const nutrientMap = {
     '208': 'calories',    // Energy (kcal)
-    '1008': 'calories',   // Energy (kcal) - alternate ID
+    '268': 'energy_kj',   // Energy (kJ) - for conversion if needed
     '203': 'protein',     // Protein (g)
-    '1003': 'protein',    // Protein (g) - alternate ID  
     '204': 'fat',         // Total lipid (fat) (g)
-    '1004': 'fat',        // Total lipid (fat) (g) - alternate ID
     '205': 'carbs',       // Carbohydrate, by difference (g)
-    '1005': 'carbs',      // Carbohydrate, by difference (g) - alternate ID
-    '269': 'carbs',       // Total sugars (g) - fallback for carbs
-    '291': 'carbs',       // Fiber, total dietary (g) - can add to carbs
+    '269': 'sugars',      // Total sugars (g) - can add to carbs if no main carbs
+    '291': 'fiber',       // Fiber, total dietary (g) - can add to carbs
   };
 
   console.log(`Extracting nutrients for: ${foodData.description || 'Unknown'}`);
   console.log(`Found ${foodData.foodNutrients.length} nutrients`);
 
+  // Look for our target nutrients specifically
+  const targetNutrients = [];
   for (const nutrient of foodData.foodNutrients) {
-    // Handle different nutrient data structures from API
-    const nutrientId = String(nutrient.number || nutrient.nutrient?.id || nutrient.nutrientId);
-    const field = nutrientMap[nutrientId];
+    const nutrientNumber = String(nutrient.nutrientNumber || '');
+    if (Object.keys(nutrientMap).includes(nutrientNumber)) {
+      targetNutrients.push({
+        number: nutrientNumber,
+        name: nutrient.nutrientName,
+        value: nutrient.value,
+        unitName: nutrient.unitName,
+        field: nutrientMap[nutrientNumber]
+      });
+    }
+  }
+  
+  console.log(`Found ${targetNutrients.length} target nutrients:`, targetNutrients);
 
-    if (field && nutrient.amount !== null && nutrient.amount !== undefined) {
-      const value = parseFloat(nutrient.amount || nutrient.value || 0);
+  for (const nutrient of foodData.foodNutrients) {
+    // Use nutrientNumber from the actual API structure
+    const nutrientNumber = String(nutrient.nutrientNumber || '');
+    const field = nutrientMap[nutrientNumber];
+
+    if (field && nutrient.value !== null && nutrient.value !== undefined) {
+      const value = parseFloat(nutrient.value || 0);
       
-      if (value > 0) {
-        // For carbs, we might want to add fiber to total carbs
-        if (field === 'carbs' && (nutrientId === '291')) {
-          // Add fiber to existing carbs
-          nutrients[field] += Math.round(value * 10) / 10;
-        } else {
-          // Round to 1 decimal place and ensure we take the highest value if multiple entries
-          nutrients[field] = Math.max(nutrients[field], Math.round(value * 10) / 10);
+      if (value >= 0) { // Allow 0 values for meat (like carbs)
+        // Map the fields correctly
+        if (field === 'calories') {
+          nutrients.calories = Math.max(nutrients.calories, Math.round(value));
+        } else if (field === 'protein') {
+          nutrients.protein = Math.max(nutrients.protein, Math.round(value * 10) / 10);
+        } else if (field === 'fat') {
+          nutrients.fat = Math.max(nutrients.fat, Math.round(value * 10) / 10);
+        } else if (field === 'carbs') {
+          nutrients.carbs = Math.max(nutrients.carbs, Math.round(value * 10) / 10);
+        } else if (field === 'fiber' && nutrients.carbs === 0) {
+          // Add fiber to carbs if no main carbs found
+          nutrients.carbs += Math.round(value * 10) / 10;
+        } else if (field === 'sugars' && nutrients.carbs === 0) {
+          // Use sugars as carbs if no main carbs found
+          nutrients.carbs = Math.max(nutrients.carbs, Math.round(value * 10) / 10);
+        } else if (field === 'energy_kj' && nutrients.calories === 0) {
+          // Convert kJ to kcal if no direct calories (kJ ÷ 4.184 = kcal)
+          nutrients.calories = Math.round(value / 4.184);
         }
         
-        console.log(`  ${nutrient.name || 'Unknown nutrient'} (${nutrientId}): ${value} -> ${field}`);
+        console.log(`  MATCHED: ${nutrient.nutrientName || 'Unknown nutrient'} (${nutrientNumber}): ${value} ${nutrient.unitName} -> ${field}`);
       }
     }
   }
 
-  // For calories, if not found, estimate from macros (4 cal/g protein & carbs, 9 cal/g fat)
+  // For calories, if still not found, estimate from macros (4 cal/g protein & carbs, 9 cal/g fat)
   if (nutrients.calories === 0 && (nutrients.protein || nutrients.fat || nutrients.carbs)) {
     nutrients.calories = Math.round(
       (nutrients.protein * 4) + 
