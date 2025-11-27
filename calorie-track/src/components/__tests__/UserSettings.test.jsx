@@ -1,11 +1,9 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-// 1. FIX: Import jest-dom to enable 'toHaveValue', 'toBeInTheDocument', etc.
 import '@testing-library/jest-dom'; 
 import UserSettings from '../UserSettings';
 
-// --- MOCKS ---
 jest.mock('../../config', () => ({
   firebaseConfig: {
     apiKey: "test-key",
@@ -33,7 +31,6 @@ describe('UserSettings component', () => {
   });
 
   test('renders initial values and Close Settings triggers onClose', async () => {
-    // 2. FIX: Setup the user session
     const user = userEvent.setup();
     const onClose = jest.fn();
     
@@ -42,7 +39,6 @@ describe('UserSettings component', () => {
     expect(screen.getByPlaceholderText('Enter display name')).toHaveValue('Alice');
     expect(screen.getByPlaceholderText('Enter email')).toHaveValue('alice@example.com');
 
-    // 3. FIX: Await the interaction
     await user.click(screen.getByRole('button', { name: /close settings/i }));
     expect(onClose).toHaveBeenCalled();
   });
@@ -56,7 +52,6 @@ describe('UserSettings component', () => {
     const input = screen.getByPlaceholderText('Enter display name');
     const btn = screen.getByRole('button', { name: /update display name/i });
 
-    // 3. FIX: Await every interaction (clear, type, click)
     await user.clear(input);
     await user.type(input, 'Bob');
     await user.click(btn);
