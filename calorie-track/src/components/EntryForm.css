@@ -133,6 +133,8 @@
   position: sticky;
   top: 0;
   z-index: 1;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); /* for Safari support */
 }
 
 .usda-header-with-filter {
