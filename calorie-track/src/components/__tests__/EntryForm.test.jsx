@@ -30,8 +30,9 @@ describe('EntryForm', () => {
     const onAdd = jest.fn();
     render(<EntryForm onAdd={onAdd} />);
 
+    // Process of filling out form
     const nameInput = screen.getByLabelText(/Food Name/i);
-    await userEvent.type(nameInput, '  Banana  '); //Tests trimming
+    await userEvent.type(nameInput, '  Banana  ');
 
     const manualOption = await screen.findByText(/enter nutrition data manually/i);
     await userEvent.click(manualOption);
@@ -46,6 +47,7 @@ describe('EntryForm', () => {
     await userEvent.type(fatInput, '0.5');
     await userEvent.type(carbsInput, '27');
 
+    // Submitting form
     const addButton = screen.getByRole('button', { name: /Add Entry/i });
     expect(addButton).toBeEnabled();
 
@@ -55,7 +57,7 @@ describe('EntryForm', () => {
 
     expect(onAdd).toHaveBeenCalledWith('Banana', '1', 100, 1.2, 0.5, 27);
 
-    // After submit the form should reset
+    // Check form has reset
     expect(nameInput).toHaveValue('');
     expect(caloriesInput).not.toBeInTheDocument();
     expect(proteinInput).not.toBeInTheDocument();
