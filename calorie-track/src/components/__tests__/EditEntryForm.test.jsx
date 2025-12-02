@@ -3,13 +3,13 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import EditEntryForm from '../EditEntryForm';
 
+import { getFoodSuggestions } from '../../api';
+
 jest.mock('../../api', () => ({
   getFoodSuggestions: jest.fn(),
 }));
 
-import { getFoodSuggestions } from '../../api';
-
-describe('EditEntryForm', () => {
+describe('EditEntryForm component', () => {
   const sampleEntry = {
     id: 'abc123',
     name: 'Toast',
@@ -87,6 +87,16 @@ describe('EditEntryForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /Cancel/i }));
     expect(onCancel).toHaveBeenCalledTimes(1);
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  test('save button calls onSave and not onCancel', async () => {
+    const onSave = jest.fn();
+    const onCancel = jest.fn();
+    render(<EditEntryForm entry={sampleEntry} onSave={onSave} onCancel={onCancel} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /Update Entry/i }));
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onCancel).not.toHaveBeenCalled();
   });
 
   test('fetches suggestions after debounce and selecting a suggestion populates fields', async () => {
