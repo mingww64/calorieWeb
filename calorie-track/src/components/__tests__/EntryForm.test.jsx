@@ -1,7 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import EntryForm from '../EntryForm';
+
+import { getFoodSuggestions } from '../../api';
 
 jest.mock('../../api', () => ({
   getFoodSuggestions: jest.fn().mockResolvedValue([
@@ -16,7 +18,7 @@ jest.mock('../../api', () => ({
   searchUSDAFoods: jest.fn().mockResolvedValue({ suggestions: [] }),
 }));
 
-describe('EntryForm', () => {
+describe('EntryForm component', () => {
   test('renders form with Add Entry disabled initially', () => {
     const onAdd = jest.fn();
     render(<EntryForm onAdd={onAdd} />);
@@ -141,5 +143,32 @@ describe('EntryForm', () => {
     expect(screen.getByLabelText(/Protein/i)).toHaveValue(3.4);
     expect(screen.getByLabelText(/Fat/i)).toHaveValue(1.2);
     expect(screen.getByLabelText(/Carbs/i)).toHaveValue(22);
+  });
+
+  test('handles API errors gracefully without crashing', async () => {
+    jest.useFakeTimers();
+    const onAdd = jest.fn();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    
+    getFoodSuggestions.mockRejectedValue(new Error('API Error'));
+
+    render(<EntryForm onAdd={onAdd}/>);
+
+    const nameInput = screen.getByLabelText(/Food Name/i);
+    await user.type(nameInput, 'Ap');
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    await waitFor(() => expect(getFoodSuggestions).toHaveBeenCalled());
+
+    expect(screen.queryByText('.suggestions')).not.toBeInTheDocument();
+    
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch suggestions:', expect.any(Error));
+
+    consoleSpy.mockRestore();
+    jest.useRealTimers();
   });
 });
