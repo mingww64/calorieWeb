@@ -40,7 +40,7 @@ describe('User Registration Flow', () => {
     });
     await page.click('button[type="submit"]');
 
-    const prevButton = await page.locator("::-p-text(← Previous)");
+    const prevButton = await page.locator("::-p-text(Previous)");
     await prevButton.click();
 
     const now = new Date();
