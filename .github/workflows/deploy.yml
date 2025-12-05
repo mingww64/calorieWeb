@@ -94,7 +94,7 @@ jobs:
         working-directory: calorie-track
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: site-dist
           path: calorie-track/dist
