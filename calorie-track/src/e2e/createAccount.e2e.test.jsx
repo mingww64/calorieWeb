@@ -40,7 +40,7 @@ describe('User Registration Flow', () => {
     });
     await page.click('button[type="submit"]');
 
-    const prevButton = await page.locator("::-p-text(Previous)");
+    const prevButton = await page.locator("::-p-text(← Previous)");
     await prevButton.click();
 
     const now = new Date();
@@ -57,7 +57,10 @@ describe('User Registration Flow', () => {
       year: 'numeric'
     });
 
-    await page.waitForSelector(`::-p-text(${expectedText})`);
+    await page.waitForFunction((text) => {
+      const nodes = Array.from(document.querySelectorAll('.date-text'));
+      return nodes.some((el) => (el.textContent || '').trim() === text);
+    }, {}, expectedText);
 
     const foodNameInput = await page.locator('#name');
     await foodNameInput.fill('Test Apple');
