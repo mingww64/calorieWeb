@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { auth } from './firebase';
 import {
   createUserWithEmailAndPassword,
@@ -192,6 +192,7 @@ function App() {
     }
   };
 
+// Layout prototyped by AI.
   if (loading) return <div className="app">Loading...</div>;
 
   if (!user) {

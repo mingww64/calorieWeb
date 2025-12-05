@@ -5,7 +5,7 @@ function UserHeader({ user, onSignOut, onSettings, onTrends }) {
   const displayName = user.displayName || user.email;
   const [gravatarUrl, setGravatarUrl] = React.useState('');
 
-  // Generate Gravatar URL using Web Cryptography API
+  // Generate Gravatar URL using Web Cryptography API (Implemented by AI)
   React.useEffect(() => {
     const generateGravatarUrl = async (email) => {
       if (!email) return;
