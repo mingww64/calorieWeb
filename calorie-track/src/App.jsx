@@ -28,6 +28,7 @@ import DateSelector from './components/DateSelector';
 import Analysis from './components/Analysis';
 import HistoricalTrends from './components/HistoricalTrends';
 import AISuggestions from './components/AISuggestions';
+import ImagePrompt from './components/ImagePrompt';
 import './App.css';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
     return new Date().toISOString().slice(0, 10);
   });
   const [failedLoginAttempts, setFailedLoginAttempts] = useState(0);
+  const [recognizedFood, setRecognizedFood] = useState(null);
 
   // Auth state listener
   useEffect(() => {
@@ -165,6 +167,15 @@ function App() {
     await signOut(auth);
   };
 
+  // Handle food recognition completion
+  const handleRecognitionComplete = (results) => {
+    if (results && results.length > 0) {
+      // Extract the top recognition result (highest probability)
+      const topResult = results[0];
+      setRecognizedFood(topResult.className);
+    }
+  };
+
   // Add or update entry
   const handleSaveEntry = async (name, quantity, calories, protein, fat, carbs, editId = null) => {
     try {
@@ -175,6 +186,8 @@ function App() {
       }
       await loadEntries(selectedDate);
       setEditingId(null);
+      // Clear recognized food after entry is saved
+      setRecognizedFood(null);
     } catch (error) {
       alert('Failed to save entry: ' + error.message);
     }
@@ -249,14 +262,20 @@ function App() {
               onCancel={() => setEditingId(null)}
             />
           ) : (
+            <>
             <div className="entry-form-ai-container">
               <div className="entry-form-wrapper">
-                <EntryForm onAdd={handleSaveEntry} />
+                <EntryForm 
+                  onAdd={handleSaveEntry} 
+                  recognizedFood={recognizedFood}
+                />
               </div>
               <div className="ai-suggestions-wrapper">
                 <AISuggestions selectedDate={selectedDate} />
               </div>
             </div>
+            <ImagePrompt onRecognitionComplete={handleRecognitionComplete} />
+            </>
           )}
           <EntryList
             entries={entries}

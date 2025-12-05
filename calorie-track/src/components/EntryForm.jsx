@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { getFoodSuggestions, searchUSDAFoods } from '../api';
 import './EntryForm.css';
 
-function EntryForm({ onAdd }) {
+function EntryForm({ onAdd, recognizedFood }) {
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [calories, setCalories] = useState('');
@@ -65,6 +65,19 @@ function EntryForm({ onAdd }) {
       carbs: Math.round(baseNutrition.carbs * ratio * 10) / 10
     };
   };
+  
+  // Handle recognized food from image recognition
+  useEffect(() => {
+    if (recognizedFood && recognizedFood.trim()) {
+      // Auto-fill the food name
+      setName(recognizedFood);
+      // Focus the name input
+      if (nameInputRef.current) {
+        nameInputRef.current.focus();
+      }
+      // USDA search will automatically trigger via the existing search useEffect
+    }
+  }, [recognizedFood]);
 
   // Combined search: local autocomplete + USDA results (Used to be two separate effects, merged by AI)
   useEffect(() => {
