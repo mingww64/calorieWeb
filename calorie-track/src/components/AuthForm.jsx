@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './AuthForm.css';
 
 function AuthForm({ onSignUp, onSignIn, onResetPassword, showForgotPassword }) {

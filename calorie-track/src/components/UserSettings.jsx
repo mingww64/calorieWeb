@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// User handlers are AI implemented.
+import { useState, useEffect } from 'react';
 import {
   updateProfile,
   updateEmail,
@@ -6,7 +7,6 @@ import {
   verifyBeforeUpdateEmail,
   sendEmailVerification,
 } from 'firebase/auth';
-import { auth } from '../firebase';
 import './UserSettings.css';
 
 function UserSettings({ user, onClose, calorieGoal = 2000, onUpdateCalorieGoal }) {
@@ -14,7 +14,6 @@ function UserSettings({ user, onClose, calorieGoal = 2000, onUpdateCalorieGoal }
   const [email, setEmail] = useState(user.email || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');

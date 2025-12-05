@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+// Modified by AI to use css modules to prevent style conflicts with other components.
+import { useMemo, useState } from 'react';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import styles from './Analysis.module.css';
 
 
@@ -10,7 +11,6 @@ function Analysis({ entries, calorieGoal = 2000 }) {
     const remaining = goal - total;
     const percentage = goal > 0 ? Math.round((total / goal) * 100) : 0;
     
-    // Calculate actual macros from entries (no estimation fallback)
     let protein = 0;
     let fat = 0;
     let carbs = 0;

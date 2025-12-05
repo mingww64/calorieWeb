@@ -1,4 +1,10 @@
-import React, { useState, useEffect } from 'react';
+/* 
+Legend and bar chart rendering for historical trends of calorie and macronutrient intake. 
+Chart implemented by AI. Updated for missing data handling and improved UX. Date range selector added.
+
+Class name modified by AI to use css modules to prevent style conflicts with other components.
+*/
+import { useState, useEffect } from 'react';
 import { getSummary } from '../api';
 import styles from './HistoricalTrends.module.css';
 
