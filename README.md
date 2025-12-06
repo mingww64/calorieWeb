@@ -132,6 +132,16 @@ npm test
 
 ---
 
+
+## Diagrams
+
+
+![Entity-Relationship Diagram](Diagram_1.png)
+Above is an entity-relationship diagram that displays the entities' relationships between one another in the project.
+
+![Sequence Diagram](Diagram_2.png)
+Above depicts a typical behavior of the program when a user wants to log in and add an entry.
+
 ## API Documentation
 
 Complete API documentation is in `API.md` at the project root.
