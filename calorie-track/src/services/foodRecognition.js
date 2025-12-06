@@ -1,3 +1,13 @@
+// PROMPT: Imagine you are a senior software engineer. You have extensive experience with React and Tensorflow.js.
+// As a user, I want to take a picture of my food and have the app try to identify it. When I confirm the 
+// suggestion, the food name is filled in the entry form. Use a separate javascript file to handle the 
+// tensorflow package. Only load the Tensorflow after the user uploads their image. Make sure the image is safe
+// Give me a plan for how you want to generate this.
+// Generate a component called ImagePrompt that allows the user to upload an image and recognize food items in it.
+
+// This additionally generated ImagePrompt.css and ImagePrompt.jsx
+// I used the framework provided by the code for foodRecognition.js, but reimplemented Tensorflow usage.
+
 /**
  * Food Recognition Service using TensorFlow.js and MobileNet
  * Uses lazy loading to keep initial bundle size small

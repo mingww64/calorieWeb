@@ -39,7 +39,7 @@ describe('DateSelector component', () => {
     const testDate = getDateString(5);
     render(<DateSelector selectedDate={testDate} onDateChange={mockOnDateChange} />);
 
-    const dateText = screen.getByText(/,/); // Date format includes comma
+    const dateText = screen.getByText(/,/);
     expect(dateText).toBeInTheDocument();
   });  
 
@@ -94,6 +94,24 @@ describe('DateSelector component', () => {
     expect(mockOnDateChange).not.toHaveBeenCalled();
   });
 
+  test('displays "Go to Today" button when date is not today', () => {
+    const testDate = getDateString(3);
+    render(<DateSelector selectedDate={testDate} onDateChange={mockOnDateChange} />);
+
+    expect(screen.getByRole('button', { name: /Go to Today/i })).toBeInTheDocument();
+  });
+
+  test('does not display "Go to Today" button when date is today', () => {
+    render(<DateSelector selectedDate={today} onDateChange={mockOnDateChange} />);
+
+    expect(screen.queryByRole('button', { name: /Go to Today/i })).not.toBeInTheDocument();
+  });
+
+  // Imagine you are a jest expert. Implement more test cases for edge cases on the DateSelector 
+  // component (Provided existing cases and DateSelector.jsx).
+  
+  // Prompt implemented test cases below
+  // Tests were reviewed and debugged to ensure they are not overfit, as well as ensuring they were relevant.
   test('does not allow going beyond today when Next button is clicked', async () => {
     const user = userEvent.setup();
     const yesterday = getDateString(1);
@@ -107,19 +125,6 @@ describe('DateSelector component', () => {
     rerender(<DateSelector selectedDate={today} onDateChange={mockOnDateChange} />);
     const updatedNextButton = screen.getByRole('button', { name: /Next →/i });
     expect(updatedNextButton).toBeDisabled();
-  });
-
-  test('displays "Go to Today" button when date is not today', () => {
-    const testDate = getDateString(3);
-    render(<DateSelector selectedDate={testDate} onDateChange={mockOnDateChange} />);
-
-    expect(screen.getByRole('button', { name: /Go to Today/i })).toBeInTheDocument();
-  });
-
-  test('does not display "Go to Today" button when date is today', () => {
-    render(<DateSelector selectedDate={today} onDateChange={mockOnDateChange} />);
-
-    expect(screen.queryByRole('button', { name: /Go to Today/i })).not.toBeInTheDocument();
   });
 
   test('calls onDateChange with today when "Go to Today" button is clicked', async () => {
@@ -165,7 +170,6 @@ describe('DateSelector component', () => {
     const testDate = getDateString(5);
     const { container } = render(<DateSelector selectedDate={testDate} onDateChange={mockOnDateChange} />);
 
-    // Mock showPicker method (it doesn't exist in jsdom)
     const dateInput = container.querySelector('input[type="date"]');
     if (dateInput) {
       dateInput.showPicker = jest.fn();

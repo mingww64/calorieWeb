@@ -1,3 +1,6 @@
+// PROMPT: Imagine you are an expert at Jest and React testing. Create a test case for the UserHeader component.
+// The test should confirm that all components render correctly and that the functions behave properly.
+
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

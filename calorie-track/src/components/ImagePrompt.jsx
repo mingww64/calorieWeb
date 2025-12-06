@@ -1,3 +1,10 @@
+// This component was originally generated with ImagePrompt.js AI prompt.
+// It was additionally prompted to add modal
+
+// Note: This was heavily refactored and debugged in order to adjust logic away from uploading images.
+// The prompt originally wanted to upload images to the server, but this was adjusted to handle everything locally.
+// Function layouts and callbacks were adjusted heavily.
+
 import React, { useState, useRef } from 'react';
 import './ImagePrompt.css';
 import { recognizeFood } from '../services/foodRecognition';
@@ -95,7 +102,8 @@ function ImagePrompt({
   };
 
   const handleSelectFood = (foodItem) => {
-    if (!foodItem?.className) return;
+    if (!foodItem || !foodItem.className)
+      return;
     onRecognitionComplete?.([foodItem]);
     handleCloseModal();
   };
