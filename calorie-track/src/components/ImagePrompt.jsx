@@ -10,7 +10,7 @@ import './ImagePrompt.css';
 import { recognizeFood } from '../services/foodRecognition';
 
 const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
-const TOP_K_RESULTS = 5;
+const RESULT_COUNT = 5;
 const BYTES_PER_MB = 1024 * 1024;
 
 function ImagePrompt({
@@ -92,7 +92,7 @@ function ImagePrompt({
     setRecognizedFoods([]);
 
     try {
-      const results = await recognizeFood(preview, TOP_K_RESULTS);
+      const results = await recognizeFood(preview, RESULT_COUNT);
       setRecognizedFoods(Array.isArray(results) ? results : []);
     } catch (err) {
       showError(err.message || 'Failed to recognize food in image.');
