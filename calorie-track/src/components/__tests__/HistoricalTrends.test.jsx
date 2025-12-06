@@ -1,5 +1,11 @@
+// PROMPT: Imagine you are an expert at Jest and React testing. Based off of the format of the other
+// test files (provided header from previously completed test files), create
+// a framework for testing the HistoricalTrends component. (Provide HistoricalTrends.jsx)
+
+// This generated the API mocks and mock summary data, alongside helper functions.
+
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import HistoricalTrends from '../HistoricalTrends';

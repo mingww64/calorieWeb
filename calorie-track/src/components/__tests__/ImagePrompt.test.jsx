@@ -1,3 +1,12 @@
+// PROMPT: (Provide ImagePrompt.jsx) Imagine you are an expert at Jest and React testing. Implement... 
+// Tests that there is a rendered button that opens modal.
+// Tests that opened modal will have a space to drop image.
+// Tests that when the image is uploaded, the image is handled safely.
+// Tests that when the image is uploaded, there is a button to remove and a button to recognize food.
+// Tests that once recognize food is called, that it calls the javascript function.
+
+// Test cases were then traced and debugged/refactored to ensure they are not overfit
+
 import React, { act } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

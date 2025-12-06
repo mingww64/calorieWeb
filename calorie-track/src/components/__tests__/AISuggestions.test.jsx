@@ -55,7 +55,6 @@ const expectSuggestionText = () => {
 describe('AISuggestions component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Reset mock implementation
     getAISuggestions.mockReset();
   });
 
@@ -76,6 +75,7 @@ describe('AISuggestions component', () => {
   });
 
   test('displays loading message while fetching suggestions', async () => {
+// Generative AI Assistance with Promises (Help explain how I can use promises to make sure loading displays)
     // Create a promise that we can control
     let resolvePromise;
     const pendingPromise = new Promise((resolve) => {
@@ -112,7 +112,6 @@ describe('AISuggestions component', () => {
   });
 
   test('displays "No suggestions available" when suggestions are empty', async () => {
-    // Return an object without suggestions array or with empty array
     getAISuggestions.mockResolvedValue({});
 
     render(<AISuggestions/>);
@@ -124,6 +123,7 @@ describe('AISuggestions component', () => {
     expect(screen.getByText(/No suggestions available/i)).toBeInTheDocument();
   });
 
+  // Generative AI Assistance with jest.spyOn to mock console.error
   test('displays error message when API call fails', async () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const error = new Error('API Error');
@@ -248,6 +248,9 @@ describe('AISuggestions component', () => {
     }, { timeout: 3000 });
   });
 
+  // Imagine you are a jest expert. Implement a test that handles multiple rapid refresh clicks gracefully.
+  
+  // Prompt implemented test below
   test('handles multiple rapid refresh clicks gracefully', async () => {
     const user = userEvent.setup();
     

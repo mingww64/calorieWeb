@@ -531,6 +531,6 @@ app.use(errorHandler);
 
 // Start server
 app.listen(port, () => {
-  console.log(`🚀 Calorie Track API listening on http://localhost:${port}`);
-  console.log(`   Health: GET http://localhost:${port}/health`);
+  console.log(`Calorie Track API listening on http://localhost:${port}`);
+  console.log(`Health: GET http://localhost:${port}/health`);
 });

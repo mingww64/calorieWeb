@@ -1,9 +1,16 @@
+// This component was originally generated with ImagePrompt.js AI prompt.
+// It was additionally prompted to add modal
+
+// Note: This was heavily refactored and debugged in order to adjust logic away from uploading images.
+// The prompt originally wanted to upload images to the server, but this was adjusted to handle everything locally.
+// Function layouts and callbacks were adjusted heavily.
+
 import React, { useState, useRef } from 'react';
 import './ImagePrompt.css';
 import { recognizeFood } from '../services/foodRecognition';
 
 const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
-const TOP_K_RESULTS = 5;
+const RESULT_COUNT = 5;
 const BYTES_PER_MB = 1024 * 1024;
 
 function ImagePrompt({
@@ -85,7 +92,7 @@ function ImagePrompt({
     setRecognizedFoods([]);
 
     try {
-      const results = await recognizeFood(preview, TOP_K_RESULTS);
+      const results = await recognizeFood(preview, RESULT_COUNT);
       setRecognizedFoods(Array.isArray(results) ? results : []);
     } catch (err) {
       showError(err.message || 'Failed to recognize food in image.');
@@ -95,7 +102,8 @@ function ImagePrompt({
   };
 
   const handleSelectFood = (foodItem) => {
-    if (!foodItem?.className) return;
+    if (!foodItem || !foodItem.className)
+      return;
     onRecognitionComplete?.([foodItem]);
     handleCloseModal();
   };
