@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getFoodSuggestions, searchUSDAFoods } from '../api';
 import './EntryForm.css';
 
@@ -16,6 +16,7 @@ function EntryForm({ onAdd, recognizedFood }) {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [searchingUSDA, setSearchingUSDA] = useState(false);
   const [usdaDataTypes, setUsdaDataTypes] = useState(['Foundation', 'SR Legacy']); // Default data types
+  const nameInputRef = useRef(null);
 
   // Calculate adjusted nutrition values based on quantity (only for weight units)
   const getAdjustedNutrition = (baseNutrition, inputQuantity) => {
@@ -61,13 +62,10 @@ function EntryForm({ onAdd, recognizedFood }) {
   // Handle recognized food from image recognition
   useEffect(() => {
     if (recognizedFood && recognizedFood.trim()) {
-      // Auto-fill the food name
       setName(recognizedFood);
-      // Focus the name input
       if (nameInputRef.current) {
         nameInputRef.current.focus();
       }
-      // USDA search will automatically trigger via the existing search useEffect
     }
   }, [recognizedFood]);
 
@@ -244,6 +242,7 @@ function EntryForm({ onAdd, recognizedFood }) {
         <input
           type="text"
           id="name"
+          ref = {nameInputRef}
           value={name}
           onChange={handleNameChange}
           placeholder="Type a food name..."
