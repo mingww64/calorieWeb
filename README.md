@@ -30,7 +30,7 @@ A modern calorie-tracking web application with real-time USDA nutrition data int
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/mingww64/calorieWeb.git
+git clone https://github.com/calorieTrack/calorieWeb.git
 cd calorieWeb
 ```
 
