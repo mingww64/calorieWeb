@@ -13,7 +13,7 @@ module.exports = {
     ] : [],
   },
   
-  browserContext: 'default', // Reuse same browser instance instead of creating new contexts
+  browserContext: 'incognito', // Prevent data persistence between tests, otherwise logout after each test is needed
   
   server: {
     command: 'npm start', 

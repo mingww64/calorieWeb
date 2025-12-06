@@ -1,3 +1,11 @@
+/* React component for adding food entries with local autocomplete and USDA database search.
+    Features:
+    - Local autocomplete suggestions from recent foods.
+    - USDA food database search with selectable data types.
+    - Nutrition data adjustment based on quantity for USDA foods. 
+      - AI modified to fix quantity adjustment logic and truncate decimals.
+    - Manual nutrition data entry option.
+*/
 import { useState, useEffect, useRef } from 'react';
 import { getFoodSuggestions, searchUSDAFoods } from '../api';
 import './EntryForm.css';
@@ -69,7 +77,7 @@ function EntryForm({ onAdd, recognizedFood }) {
     }
   }, [recognizedFood]);
 
-  // Combined search: local autocomplete + USDA results
+  // Combined search: local autocomplete + USDA results (Used to be two separate effects, merged by AI)
   useEffect(() => {
     // Don't search if a food is already selected and name matches
     if (selectedFood && (name === selectedFood.data?.name || name === selectedFood.data?.description)) {
