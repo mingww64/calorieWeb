@@ -1,3 +1,5 @@
+// THIS FILE MAKES ME SO ANGRY. IT TOOK SO LONG FOR THE WEB APP TO EVEN LOAD ON THE JEST + PUPPETER TEST ENVIRONMENT.
+// AND IT TURNED OUT THAT THE ERROR WAS DUE THE CONFIGURATION FILES
 describe('User Registration Flow', () => {
   // Increase timeout for this test suite as E2E actions can be slow
   jest.setTimeout(60000);
