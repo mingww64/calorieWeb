@@ -74,7 +74,6 @@ async function loadImagefromURL(image) {
 // Helper function to ensure image is loaded before processing
 async function ensureImageLoaded(image) {
   if (image.complete && image.naturalWidth !== 0) return image;
-  console.log("HELLO THERE");
   return new Promise((resolve, reject) => {
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error('Failed to load image'));

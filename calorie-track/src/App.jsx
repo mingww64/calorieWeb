@@ -167,10 +167,9 @@ function App() {
     await signOut(auth);
   };
 
-  // Handle food recognition completion
+  // Handle image recognition completion
   const handleRecognitionComplete = (results) => {
     if (results && results.length > 0) {
-      // Extract the top recognition result (highest probability)
       const topResult = results[0];
       setRecognizedFood(topResult.className);
     }

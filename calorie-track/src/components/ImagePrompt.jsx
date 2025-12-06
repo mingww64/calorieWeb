@@ -21,7 +21,7 @@ function ImagePrompt({
   disabled = false
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [preview, setPreview] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const [recognizing, setRecognizing] = useState(false);
   const [recognizedFoods, setRecognizedFoods] = useState([]);
   const [error, setError] = useState('');
@@ -33,7 +33,7 @@ function ImagePrompt({
   };
 
   const clearFileState = () => {
-    setPreview(null);
+    setPreviewImage(null);
     setRecognizedFoods([]);
     setError('');
     if (fileInputRef.current) {
@@ -75,7 +75,7 @@ function ImagePrompt({
     }
 
     const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result);
+    reader.onloadend = () => setPreviewImage(reader.result);
     reader.onerror = () => showError('Failed to read file.');
     reader.readAsDataURL(file);
   };
@@ -84,15 +84,15 @@ function ImagePrompt({
     clearFileState();
   };
 
-  const handleRecognize = async () => {
-    if (!preview) return;
+  const handleDoRecognition = async () => {
+    if (!previewImage) return;
 
     setRecognizing(true);
     setError('');
     setRecognizedFoods([]);
 
     try {
-      const results = await recognizeFood(preview, RESULT_COUNT);
+      const results = await recognizeFood(previewImage, RESULT_COUNT);
       setRecognizedFoods(Array.isArray(results) ? results : []);
     } catch (err) {
       showError(err.message || 'Failed to recognize food in image.');
@@ -101,6 +101,7 @@ function ImagePrompt({
     }
   };
 
+  // Pass selected food item to App so the data can be applied elsewhere
   const handleSelectFood = (foodItem) => {
     if (!foodItem || !foodItem.className)
       return;
@@ -152,9 +153,9 @@ function ImagePrompt({
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
               >
-                {preview ? (
+                {previewImage ? (
                   <div className="image-preview-container">
-                    <img src={preview} alt="Preview" className="image-preview" />
+                    <img src={previewImage} alt="Preview" className="image-preview" />
                     <div className="image-preview-actions">
                       <button
                         className="image-clear-btn"
@@ -165,7 +166,7 @@ function ImagePrompt({
                       </button>
                       <button
                         className="image-recognize-btn"
-                        onClick={handleRecognize}
+                        onClick={handleDoRecognition}
                         disabled={recognizing}
                         type="button"
                       >
