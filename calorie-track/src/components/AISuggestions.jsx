@@ -19,12 +19,12 @@ function AISuggestions({ selectedDate }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchSuggestions = async () => {
+    const fetchAISuggestions = async () => {
         setLoading(true);
         setError(null);
         try {
-            const data = await getAISuggestions(selectedDate);
-            setSuggestions(data);
+            const aiResponseData = await getAISuggestions(selectedDate);
+            setSuggestions(aiResponseData);
         } catch (err) {
             console.error('Failed to fetch AI suggestions:', err.message);
             setError(err.message);
@@ -34,7 +34,7 @@ function AISuggestions({ selectedDate }) {
     };
 
     useEffect(() => {
-        fetchSuggestions();
+        fetchAISuggestions();
     }, [selectedDate]);
 
     return (
@@ -43,7 +43,7 @@ function AISuggestions({ selectedDate }) {
                 <h2 className="ai-suggestions-h2">AI Suggestions</h2>
                 <button
                     className="ai-refresh-button"
-                    onClick={fetchSuggestions}
+                    onClick={fetchAISuggestions}
                     disabled={loading}
                     title="Refresh suggestions"
                 >

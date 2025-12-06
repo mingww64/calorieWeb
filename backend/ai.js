@@ -7,7 +7,6 @@ import { GoogleGenAI } from "@google/genai";
 // The client gets the API key from the environment variable `GEMINI_API_KEY`.
 const ai = new GoogleGenAI({});
 
-
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 export const pollSuggestions = async (nutritionData) => {
@@ -63,10 +62,8 @@ Example output (must be valid JSON, formatting below is for illustration):
     // }
     const text = response.text || '';
     try {
-      const parsed = JSON.parse(text);
-      return parsed;
-    } catch (err) {
-      // Fail fast: if the model did not return valid JSON, throw so caller can handle as an error.
+      return JSON.parse(text);
+    } catch (error) {
       throw new Error(`AI response not valid JSON:\n ${text}`);
     }
   } catch (error) {
